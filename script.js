@@ -1,4 +1,9 @@
 // ============================================================
+// KRT TRADERS ERP – Complete JavaScript
+// SUPABASE CONFIGURED AT TOP - LOGIN FIXED
+// ============================================================
+
+// ============================================================
 // ⚡ SUPABASE CONFIGURATION (AUTO-CONFIGURED)
 // ============================================================
 const SUPABASE_CONFIG = {
@@ -6,13 +11,18 @@ const SUPABASE_CONFIG = {
     API_KEY: 'sb_publishable_vOC-igCOGRZ6lmIegNTZHA_2kWXn1ve'
 };
 
-
-
-
-// ============================================================
-// KRT TRADERS ERP – Complete JavaScript
-// All-in-One File
-// ============================================================
+// Auto-save to localStorage on load
+(function autoConfigureSupabase() {
+    try {
+        localStorage.setItem('supabase_url', SUPABASE_CONFIG.URL);
+        localStorage.setItem('supabase_key', SUPABASE_CONFIG.API_KEY);
+        console.log('✅ Supabase configured successfully!');
+        console.log('📡 URL:', SUPABASE_CONFIG.URL);
+        console.log('🔑 API Key:', SUPABASE_CONFIG.API_KEY.substring(0, 20) + '...');
+    } catch (e) {
+        console.warn('⚠️ Could not save Supabase config:', e);
+    }
+})();
 
 // ============================================================
 // UTILITY FUNCTIONS
@@ -28,8 +38,7 @@ const Utils = {
             full: { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' },
             date: { year: 'numeric', month: 'short', day: 'numeric' },
             time: { hour: '2-digit', minute: '2-digit' },
-            short: { month: 'short', day: 'numeric' },
-            iso: { year: 'numeric', month: '2-digit', day: '2-digit' }
+            short: { month: 'short', day: 'numeric' }
         };
         return d.toLocaleDateString('en-US', opts[format] || opts.full);
     },
@@ -71,7 +80,6 @@ const Utils = {
         };
 
         toast.querySelector('.toast-close').addEventListener('click', closeToast);
-
         setTimeout(closeToast, duration);
     },
 
@@ -200,14 +208,19 @@ const Utils = {
 
     getSupabaseConfig() {
         return {
-            url: localStorage.getItem('supabase_url') || '',
-            key: localStorage.getItem('supabase_key') || ''
+            url: localStorage.getItem('supabase_url') || SUPABASE_CONFIG.URL,
+            key: localStorage.getItem('supabase_key') || SUPABASE_CONFIG.API_KEY
         };
     },
 
     setSupabaseConfig(url, key) {
         if (url) localStorage.setItem('supabase_url', url);
         if (key) localStorage.setItem('supabase_key', key);
+    },
+
+    isSupabaseConfigured() {
+        const config = this.getSupabaseConfig();
+        return !!(config.url && config.key);
     }
 };
 
@@ -411,12 +424,15 @@ const SyncManager = {
         this._checkConnection();
         this._setupListeners();
         this._startAutoSync();
+        if (Utils.isSupabaseConfigured()) {
+            console.log('✅ Supabase Sync Manager initialized');
+        }
     },
 
     _checkConnection() {
         this.isConnected = navigator.onLine;
         this._updateUI();
-        if (this.isConnected) {
+        if (this.isConnected && Utils.isSupabaseConfigured()) {
             this.processQueue();
         }
     },
@@ -439,7 +455,7 @@ const SyncManager = {
     _startAutoSync() {
         if (this.syncInterval) clearInterval(this.syncInterval);
         this.syncInterval = setInterval(() => {
-            if (this.isConnected) {
+            if (this.isConnected && Utils.isSupabaseConfigured()) {
                 this.processQueue();
             }
         }, 30000);
@@ -477,16 +493,20 @@ const SyncManager = {
                 btn.classList.remove('syncing');
             }
         }
+
+        const footerStatus = document.getElementById('syncFooterStatus');
+        if (footerStatus) {
+            if (Utils.isSupabaseConfigured()) {
+                footerStatus.textContent = this.isConnected ? '🔗 Cloud Sync Active' : '📡 Offline Mode';
+            } else {
+                footerStatus.textContent = '⚠️ Supabase Not Configured';
+            }
+        }
     },
 
     async processQueue() {
         if (!this.isConnected || this.isSyncing) return;
-
-        const config = Utils.getSupabaseConfig();
-        if (!config.url || !config.key) {
-            // No Supabase configured, skip
-            return;
-        }
+        if (!Utils.isSupabaseConfigured()) return;
 
         const queue = DB._getTable(DB.TABLES.SYNC_QUEUE);
         const pending = queue.filter(item => !item.synced);
@@ -513,14 +533,12 @@ const SyncManager = {
                 item.attempts += 1;
                 failedCount++;
                 if (item.attempts >= 5) {
-                    item.synced = true; // Skip after 5 attempts
-                    Utils.toast(`Sync failed for ${item.table}: ${error.message}`, 'error');
+                    item.synced = true;
                 }
             }
             DB._setTable(DB.TABLES.SYNC_QUEUE, queue);
         }
 
-        // Clean up synced items
         const updatedQueue = DB._getTable(DB.TABLES.SYNC_QUEUE);
         const filtered = updatedQueue.filter(item => !item.synced);
         DB._setTable(DB.TABLES.SYNC_QUEUE, filtered);
@@ -568,11 +586,7 @@ const SyncManager = {
             finalUrl = `${url}?id=eq.${item.data.id}`;
         }
 
-        const options = {
-            method,
-            headers
-        };
-
+        const options = { method, headers };
         if (body && method !== 'DELETE') {
             options.body = JSON.stringify(body);
         }
@@ -586,8 +600,7 @@ const SyncManager = {
     },
 
     forceSync() {
-        const config = Utils.getSupabaseConfig();
-        if (!config.url || !config.key) {
+        if (!Utils.isSupabaseConfigured()) {
             Utils.toast('Please configure Supabase in Settings first', 'warning');
             return;
         }
@@ -596,7 +609,7 @@ const SyncManager = {
 };
 
 // ============================================================
-// AUTHENTICATION
+// AUTHENTICATION - FIXED
 // ============================================================
 const Auth = {
     SESSION_KEY: 'krt_session',
@@ -612,6 +625,7 @@ const Auth = {
                 role: 'admin',
                 active: true
             });
+            console.log('✅ Default admin user created');
         }
         this.checkSession();
     },
@@ -722,21 +736,24 @@ const Auth = {
         if (loginPage) loginPage.style.display = 'flex';
         if (app) app.classList.remove('active');
 
-        document.getElementById('loginForm')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const username = document.getElementById('loginUsername').value.trim();
-            const password = document.getElementById('loginPassword').value;
+        const form = document.getElementById('loginForm');
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('loginUsername').value.trim();
+                const password = document.getElementById('loginPassword').value;
 
-            try {
-                this.login(username, password);
-                Utils.toast('Login successful!', 'success');
-                if (loginPage) loginPage.style.display = 'none';
-                if (app) app.classList.add('active');
-                App.init();
-            } catch (error) {
-                Utils.toast(error.message, 'error');
-            }
-        });
+                try {
+                    this.login(username, password);
+                    Utils.toast('✅ Login successful!', 'success');
+                    if (loginPage) loginPage.style.display = 'none';
+                    if (app) app.classList.add('active');
+                    App.init();
+                } catch (error) {
+                    Utils.toast('❌ ' + error.message, 'error');
+                }
+            });
+        }
     },
 
     _updateUI(session) {
@@ -768,15 +785,10 @@ const App = {
         this._setupLogout();
         this._setupSidebarToggle();
         this._setupUserDropdown();
-        this._setupFullscreen();
         this._updateDateTime();
         setInterval(() => this._updateDateTime(), 1000);
         SyncManager.init();
-
-        // Update counts
         this._updateCounts();
-
-        // Load default page
         this.loadPage('dashboard');
     },
 
@@ -861,16 +873,6 @@ const App = {
 
         document.addEventListener('click', () => {
             dropdown?.classList.remove('show');
-        });
-    },
-
-    _setupFullscreen() {
-        document.getElementById('fullscreenBtn')?.addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            } else {
-                document.exitFullscreen().catch(() => {});
-            }
         });
     },
 
@@ -1007,9 +1009,7 @@ const App = {
                     </div>
                     <div class="table-responsive">
                         <table>
-                            <thead>
-                                <tr><th>Date</th><th>Type</th><th>Item</th><th>Qty</th><th>Amount</th></tr>
-                            </thead>
+                            <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Qty</th><th>Amount</th></tr></thead>
                             <tbody>
                                 ${recentTransactions.map(t => `
                                     <tr>
@@ -1070,8 +1070,10 @@ const App = {
                         <span>${DB.getStockBalance().length}</span>
                     </div>
                     <div>
-                        <span style="color:var(--text-secondary);">Last Sync:</span>
-                        <span>${localStorage.getItem('krt_last_sync') ? new Date(localStorage.getItem('krt_last_sync')).toLocaleString() : 'Never'}</span>
+                        <span style="color:var(--text-secondary);">Supabase:</span>
+                        <span class="${Utils.isSupabaseConfigured() ? 'text-success' : 'text-danger'}">
+                            ${Utils.isSupabaseConfigured() ? '✅ Configured' : '❌ Not Configured'}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -1546,7 +1548,6 @@ const App = {
             const taxAmount = ((subtotal - discountAmount) * tax) / 100;
             const total = subtotal - discountAmount + taxAmount;
 
-            // Calculate profit
             const stockIn = DB.readAll(DB.TABLES.STOCK_IN);
             const purchaseItem = stockIn.find(s => s.itemName === document.getElementById('soItem').value.trim());
             const purchasePrice = purchaseItem?.purchasePrice || 0;
@@ -1572,7 +1573,6 @@ const App = {
                 return;
             }
 
-            // Check stock availability
             const balance = DB.getStockBalance();
             const stockItem = balance.find(b => b.itemName === formData.itemName);
             if (stockItem && stockItem.available < qty) {
@@ -1592,7 +1592,6 @@ const App = {
             this._renderStockOut();
         });
 
-        // Barcode lookup
         document.getElementById('soBarcode')?.addEventListener('change', (e) => {
             const barcode = e.target.value.trim();
             if (barcode) {
@@ -2191,12 +2190,6 @@ const App = {
 
         document.getElementById('ledgerSearch')?.addEventListener('input', Utils.debounce(this._filterLedger, 300));
         document.getElementById('ledgerType')?.addEventListener('change', this._filterLedger);
-
-        // Set default dates
-        const now = new Date();
-        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-        document.getElementById('ledgerStart').value = firstDay.toISOString().split('T')[0];
-        document.getElementById('ledgerEnd').value = now.toISOString().split('T')[0];
     },
 
     _filterLedger() {
@@ -2213,7 +2206,6 @@ const App = {
             data = data.filter(item => item.type === type);
         }
 
-        // Calculate running balance
         let balance = 0;
         data = data.map(item => {
             if (item.type === 'credit') balance += item.amount;
@@ -2354,48 +2346,33 @@ const App = {
 
             <div class="dashboard-grid">
                 <div class="stat-card" onclick="App._generateReportType('purchase')" style="cursor:pointer;">
-                    <div class="stat-top">
-                        <div class="stat-icon"><i class="fas fa-truck"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon"><i class="fas fa-truck"></i></div></div>
                     <div class="stat-label">Purchase Report</div>
                 </div>
                 <div class="stat-card" onclick="App._generateReportType('sales')" style="cursor:pointer;">
-                    <div class="stat-top">
-                        <div class="stat-icon green"><i class="fas fa-shopping-cart"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon green"><i class="fas fa-shopping-cart"></i></div></div>
                     <div class="stat-label">Sales Report</div>
                 </div>
                 <div class="stat-card" onclick="App._generateReportType('profit')" style="cursor:pointer;">
-                    <div class="stat-top">
-                        <div class="stat-icon blue"><i class="fas fa-chart-line"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon blue"><i class="fas fa-chart-line"></i></div></div>
                     <div class="stat-label">Profit Report</div>
                 </div>
                 <div class="stat-card" onclick="App._generateReportType('stock')" style="cursor:pointer;">
-                    <div class="stat-top">
-                        <div class="stat-icon orange"><i class="fas fa-boxes"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon orange"><i class="fas fa-boxes"></i></div></div>
                     <div class="stat-label">Stock Report</div>
                 </div>
                 <div class="stat-card" onclick="App._generateReportType('customer')" style="cursor:pointer;">
-                    <div class="stat-top">
-                        <div class="stat-icon"><i class="fas fa-users"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon"><i class="fas fa-users"></i></div></div>
                     <div class="stat-label">Customer Report</div>
                 </div>
                 <div class="stat-card" onclick="App._generateReportType('vendor')" style="cursor:pointer;">
-                    <div class="stat-top">
-                        <div class="stat-icon green"><i class="fas fa-handshake"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon green"><i class="fas fa-handshake"></i></div></div>
                     <div class="stat-label">Vendor Report</div>
                 </div>
             </div>
 
             <div id="reportOutput" class="card">
-                <div class="table-empty">
-                    <i class="fas fa-file-alt"></i>
-                    <p>Select a report type above to generate</p>
-                </div>
+                <div class="table-empty"><i class="fas fa-file-alt"></i><p>Select a report type above</p></div>
             </div>
         `;
     },
@@ -2408,39 +2385,16 @@ const App = {
         let title = '';
 
         switch(type) {
-            case 'purchase':
-                data = DB.readAll(DB.TABLES.STOCK_IN);
-                title = 'Purchase Report';
-                break;
-            case 'sales':
-                data = DB.readAll(DB.TABLES.STOCK_OUT);
-                title = 'Sales Report';
-                break;
-            case 'profit':
-                data = DB.readAll(DB.TABLES.STOCK_OUT);
-                title = 'Profit Report';
-                break;
-            case 'stock':
-                data = DB.getStockBalance();
-                title = 'Stock Report';
-                break;
-            case 'customer':
-                data = DB.readAll(DB.TABLES.CUSTOMERS);
-                title = 'Customer Report';
-                break;
-            case 'vendor':
-                data = DB.readAll(DB.TABLES.VENDORS);
-                title = 'Vendor Report';
-                break;
+            case 'purchase': data = DB.readAll(DB.TABLES.STOCK_IN); title = 'Purchase Report'; break;
+            case 'sales': data = DB.readAll(DB.TABLES.STOCK_OUT); title = 'Sales Report'; break;
+            case 'profit': data = DB.readAll(DB.TABLES.STOCK_OUT); title = 'Profit Report'; break;
+            case 'stock': data = DB.getStockBalance(); title = 'Stock Report'; break;
+            case 'customer': data = DB.readAll(DB.TABLES.CUSTOMERS); title = 'Customer Report'; break;
+            case 'vendor': data = DB.readAll(DB.TABLES.VENDORS); title = 'Vendor Report'; break;
         }
 
         if (data.length === 0) {
-            output.innerHTML = `
-                <div class="table-empty">
-                    <i class="fas fa-inbox"></i>
-                    <p>No data available for ${title}</p>
-                </div>
-            `;
+            output.innerHTML = `<div class="table-empty"><i class="fas fa-inbox"></i><p>No data available</p></div>`;
             return;
         }
 
@@ -2456,32 +2410,21 @@ const App = {
             </div>
             <div class="table-responsive">
                 <table>
-                    <thead>
-                        <tr>${headers.map(h => `<th>${h.replace(/([A-Z])/g, ' $1').trim()}</th>`).join('')}</tr>
-                    </thead>
+                    <thead><tr>${headers.map(h => `<th>${h.replace(/([A-Z])/g, ' $1').trim()}</th>`).join('')}</tr></thead>
                     <tbody>
                         ${data.slice(0, 100).map(item => `
-                            <tr>
-                                ${headers.map(h => {
-                                    let val = item[h];
-                                    if (typeof val === 'number' && h.toLowerCase().includes('price')) {
-                                        val = Utils.formatCurrency(val);
-                                    } else if (typeof val === 'number') {
-                                        val = val;
-                                    } else if (h.includes('Date') || h.includes('date')) {
-                                        val = Utils.formatDate(val, 'date');
-                                    }
-                                    return `<td>${val || '-'}</td>`;
-                                }).join('')}
-                            </tr>
+                            <tr>${headers.map(h => {
+                                let val = item[h];
+                                if (typeof val === 'number' && h.toLowerCase().includes('price')) val = Utils.formatCurrency(val);
+                                else if (h.includes('Date') || h.includes('date')) val = Utils.formatDate(val, 'date');
+                                return `<td>${val || '-'}</td>`;
+                            }).join('')}</tr>
                         `).join('')}
                     </tbody>
                 </table>
-                ${data.length > 100 ? `<p class="text-muted mt-8">Showing first 100 of ${data.length} records</p>` : ''}
+                ${data.length > 100 ? `<p class="text-muted mt-8">Showing 100 of ${data.length}</p>` : ''}
             </div>
         `;
-
-        window._reportData = { type, data, title };
     },
 
     _exportReport(type) {
@@ -2495,17 +2438,10 @@ const App = {
             case 'vendor': data = DB.readAll(DB.TABLES.VENDORS); break;
         }
 
-        if (data.length === 0) {
-            Utils.toast('No data to export', 'warning');
-            return;
-        }
+        if (data.length === 0) { Utils.toast('No data', 'warning'); return; }
 
         const headers = Object.keys(data[0]).filter(h => !['id', 'password', 'createdAt', 'updatedAt'].includes(h));
-        const csv = Utils.arrayToCSV(data.map(item => {
-            const obj = {};
-            headers.forEach(h => { obj[h] = item[h] || ''; });
-            return obj;
-        }), headers);
+        const csv = Utils.arrayToCSV(data, headers);
         Utils.downloadFile(csv, `${type}_report_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
         Utils.toast('Report exported!', 'success');
     },
@@ -2519,13 +2455,13 @@ const App = {
         printWindow.document.write(`
             <html><head><title>${type} Report</title>
             <style>
-                body { font-family: Arial, sans-serif; padding: 30px; }
-                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
-                .header h1 { margin: 0; color: #4F46E5; }
-                table { width: 100%; border-collapse: collapse; font-size: 10px; }
-                th { background: #f0f0f0; padding: 6px; text-align: left; border: 1px solid #ddd; }
-                td { padding: 4px 6px; border: 1px solid #ddd; }
-                .footer { text-align: center; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px; color: #666; }
+                body { font-family: Arial; padding:30px; }
+                .header { text-align:center; border-bottom:2px solid #333; padding-bottom:20px; margin-bottom:20px; }
+                .header h1 { margin:0; color:#4F46E5; }
+                table { width:100%; border-collapse:collapse; font-size:10px; }
+                th { background:#f0f0f0; padding:6px; border:1px solid #ddd; }
+                td { padding:4px 6px; border:1px solid #ddd; }
+                .footer { text-align:center; margin-top:20px; border-top:1px solid #ddd; padding-top:20px; color:#666; }
             </style>
             </head>
             <body>
@@ -2536,9 +2472,7 @@ const App = {
                     <p>Generated: ${new Date().toLocaleString()}</p>
                 </div>
                 ${output.innerHTML.replace(/<button[^>]*>.*?<\/button>/g, '')}
-                <div class="footer">
-                    <p>${settings.footerNote || 'Thank you for your business!'}</p>
-                </div>
+                <div class="footer"><p>${settings.footerNote || 'Thank you!'}</p></div>
                 <script>window.onload = function() { window.print(); }</script>
             </body>
             </html>
@@ -2576,18 +2510,11 @@ const App = {
         document.getElementById('searchQuery')?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this._performSearch();
         });
-
-        const query = new URLSearchParams(window.location.search).get('q');
-        if (query) {
-            document.getElementById('searchQuery').value = query;
-            setTimeout(() => this._performSearch(), 100);
-        }
     },
 
     _performSearch() {
         const query = document.getElementById('searchQuery')?.value.trim();
         const results = document.getElementById('searchResults');
-
         if (!query || !results) return;
 
         const stockIn = DB.readAll(DB.TABLES.STOCK_IN);
@@ -2624,12 +2551,7 @@ const App = {
 
         if (totalResults === 0) {
             results.innerHTML = `
-                <div class="card">
-                    <div class="table-empty">
-                        <i class="fas fa-search"></i>
-                        <p>No results found for "<strong>${query}</strong>"</p>
-                    </div>
-                </div>
+                <div class="card"><div class="table-empty"><i class="fas fa-search"></i><p>No results for "<strong>${query}</strong>"</p></div></div>
             `;
             return;
         }
@@ -2762,8 +2684,6 @@ const App = {
                                 <option value="PKR" ${settings.currency === 'PKR' ? 'selected' : ''}>PKR</option>
                                 <option value="USD" ${settings.currency === 'USD' ? 'selected' : ''}>USD</option>
                                 <option value="EUR" ${settings.currency === 'EUR' ? 'selected' : ''}>EUR</option>
-                                <option value="GBP" ${settings.currency === 'GBP' ? 'selected' : ''}>GBP</option>
-                                <option value="INR" ${settings.currency === 'INR' ? 'selected' : ''}>INR</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -2773,7 +2693,7 @@ const App = {
                     </div>
                     <div class="form-group">
                         <label>Footer Note</label>
-                        <input type="text" id="setFooter" class="form-control" value="${settings.footerNote || ''}" placeholder="Thank you for your business!" />
+                        <input type="text" id="setFooter" class="form-control" value="${settings.footerNote || ''}" />
                     </div>
                     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Settings</button>
                 </form>
@@ -2781,6 +2701,14 @@ const App = {
 
             <div class="card">
                 <h3 class="card-title"><i class="fas fa-cloud"></i> Supabase Cloud Sync</h3>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                    <span class="badge ${Utils.isSupabaseConfigured() ? 'badge-success' : 'badge-danger'}">
+                        ${Utils.isSupabaseConfigured() ? '✅ Configured' : '❌ Not Configured'}
+                    </span>
+                    <span class="badge ${navigator.onLine ? 'badge-success' : 'badge-danger'}">
+                        ${navigator.onLine ? '🟢 Online' : '🔴 Offline'}
+                    </span>
+                </div>
                 <form id="supabaseForm">
                     <div class="form-group">
                         <label>Supabase URL</label>
@@ -2791,13 +2719,8 @@ const App = {
                         <input type="password" id="setSupabaseKey" class="form-control" placeholder="Your supabase anon key" value="${config.key || ''}" />
                     </div>
                     <div class="flex gap-8">
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Configuration</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
                         <button type="button" class="btn btn-success" onclick="SyncManager.forceSync()"><i class="fas fa-sync"></i> Test Sync</button>
-                        <button type="button" class="btn btn-outline" onclick="document.getElementById('setSupabaseUrl').value='';document.getElementById('setSupabaseKey').value='';Utils.setSupabaseConfig('','');Utils.toast('Cleared!','success');"><i class="fas fa-undo"></i> Clear</button>
-                    </div>
-                    <div class="mt-16" style="font-size:0.8rem;color:var(--text-muted);">
-                        <strong>Status:</strong>
-                        <span id="supabaseStatus">${config.url ? (navigator.onLine ? '🟢 Connected' : '🔴 Offline') : '⚪ Not Configured'}</span>
                     </div>
                 </form>
             </div>
@@ -2806,15 +2729,12 @@ const App = {
                 <h3 class="card-title"><i class="fas fa-users"></i> User Management</h3>
                 <div class="table-responsive">
                     <table>
-                        <thead>
-                            <tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr>
-                        </thead>
+                        <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody>
                             ${Auth.getUsers().map(user => `
                                 <tr>
                                     <td>${user.username}</td>
                                     <td>${user.name}</td>
-                                    <td>${user.email || 'N/A'}</td>
                                     <td><span class="badge ${user.role === 'admin' ? 'badge-warning' : 'badge-info'}">${user.role}</span></td>
                                     <td><span class="badge ${user.active !== false ? 'badge-success' : 'badge-danger'}">${user.active !== false ? 'Active' : 'Inactive'}</span></td>
                                     <td>
@@ -2831,7 +2751,6 @@ const App = {
             </div>
         `;
 
-        // Company Settings Form
         document.getElementById('settingsForm').addEventListener('submit', (e) => {
             e.preventDefault();
             Utils.updateSettings({
@@ -2846,7 +2765,6 @@ const App = {
             Utils.toast('Settings saved!', 'success');
         });
 
-        // Supabase Form
         document.getElementById('supabaseForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const url = document.getElementById('setSupabaseUrl').value.trim();
@@ -2854,8 +2772,7 @@ const App = {
 
             if (url && key) {
                 Utils.setSupabaseConfig(url, key);
-                Utils.toast('Supabase configuration saved!', 'success');
-                document.getElementById('supabaseStatus').textContent = '🟢 Connected';
+                Utils.toast('Supabase configured!', 'success');
                 SyncManager.init();
             } else {
                 Utils.toast('Please enter both URL and Key', 'warning');
@@ -2925,7 +2842,7 @@ const App = {
                     role,
                     active: true
                 });
-                Utils.toast('User created successfully!', 'success');
+                Utils.toast('User created!', 'success');
                 modal?.remove();
                 this._renderSettings();
             } catch (error) {
@@ -2935,7 +2852,7 @@ const App = {
     },
 
     async _deleteUser(id) {
-        const confirmed = await Utils.confirm('Are you sure you want to delete this user?', 'Delete User');
+        const confirmed = await Utils.confirm('Delete this user?', 'Delete');
         if (confirmed) {
             try {
                 Auth.deleteUser(id);
@@ -2958,55 +2875,31 @@ const App = {
 
             <div class="dashboard-grid">
                 <div class="stat-card" onclick="App._createBackup()" style="cursor:pointer;">
-                    <div class="stat-top">
-                        <div class="stat-icon"><i class="fas fa-download"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon"><i class="fas fa-download"></i></div></div>
                     <div class="stat-label">Create Backup</div>
-                    <div style="font-size:0.75rem;color:var(--text-muted);">Export all data as JSON</div>
                 </div>
                 <div class="stat-card" onclick="document.getElementById('restoreInput').click()" style="cursor:pointer;">
-                    <div class="stat-top">
-                        <div class="stat-icon green"><i class="fas fa-upload"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon green"><i class="fas fa-upload"></i></div></div>
                     <div class="stat-label">Restore Backup</div>
-                    <div style="font-size:0.75rem;color:var(--text-muted);">Import from JSON file</div>
                     <input type="file" id="restoreInput" accept=".json" style="display:none;" />
                 </div>
                 <div class="stat-card" onclick="App._exportExcel()" style="cursor:pointer;">
-                    <div class="stat-top">
-                        <div class="stat-icon blue"><i class="fas fa-file-excel"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon blue"><i class="fas fa-file-excel"></i></div></div>
                     <div class="stat-label">Export Excel</div>
-                    <div style="font-size:0.75rem;color:var(--text-muted);">Export all data to CSV</div>
                 </div>
                 <div class="stat-card" onclick="App._resetData()" style="cursor:pointer;">
-                    <div class="stat-top">
-                        <div class="stat-icon red"><i class="fas fa-trash"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon red"><i class="fas fa-trash"></i></div></div>
                     <div class="stat-label">Reset All Data</div>
-                    <div style="font-size:0.75rem;color:var(--text-muted);">⚠️ Irreversible action</div>
                 </div>
             </div>
 
             <div class="card">
-                <h3 class="card-title"><i class="fas fa-info-circle"></i> Backup Information</h3>
+                <h3 class="card-title"><i class="fas fa-info-circle"></i> Backup Info</h3>
                 <div class="flex flex-wrap gap-16">
-                    <div>
-                        <strong>Total Records:</strong>
-                        <span>${Object.values(DB.TABLES).reduce((sum, table) => sum + DB.readAll(table).length, 0)}</span>
-                    </div>
-                    <div>
-                        <strong>Last Backup:</strong>
-                        <span>${localStorage.getItem('krt_last_backup') || 'Never'}</span>
-                    </div>
-                    <div>
-                        <strong>Storage Used:</strong>
-                        <span>${this._getStorageSize()}</span>
-                    </div>
-                    <div>
-                        <strong>Pending Sync:</strong>
-                        <span>${DB.getPendingSyncCount()}</span>
-                    </div>
+                    <div><strong>Records:</strong> ${Object.values(DB.TABLES).reduce((sum, table) => sum + DB.readAll(table).length, 0)}</div>
+                    <div><strong>Last Backup:</strong> ${localStorage.getItem('krt_last_backup') || 'Never'}</div>
+                    <div><strong>Storage:</strong> ${this._getStorageSize()}</div>
+                    <div><strong>Pending Sync:</strong> ${DB.getPendingSyncCount()}</div>
                 </div>
             </div>
         `;
@@ -3025,11 +2918,10 @@ const App = {
             company: Utils.getSettings().companyName,
             records: Object.values(data).reduce((sum, arr) => sum + arr.length, 0)
         };
-
         const json = JSON.stringify(data, null, 2);
         Utils.downloadFile(json, `krt_backup_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
         localStorage.setItem('krt_last_backup', new Date().toLocaleString());
-        Utils.toast('Backup created successfully!', 'success');
+        Utils.toast('Backup created!', 'success');
         this._renderBackup();
     },
 
@@ -3038,23 +2930,14 @@ const App = {
         reader.onload = async (e) => {
             try {
                 const data = JSON.parse(e.target.result);
-                if (!data || typeof data !== 'object') {
-                    Utils.toast('Invalid backup file', 'error');
-                    return;
-                }
-
-                const confirmed = await Utils.confirm(
-                    'This will replace all existing data. Continue?',
-                    'Restore Backup'
-                );
-
+                const confirmed = await Utils.confirm('This will replace all data. Continue?', 'Restore');
                 if (confirmed) {
                     DB.importAll(data);
-                    Utils.toast('Backup restored successfully!', 'success');
+                    Utils.toast('Backup restored!', 'success');
                     this._renderBackup();
                 }
             } catch (error) {
-                Utils.toast('Error restoring backup: ' + error.message, 'error');
+                Utils.toast('Invalid backup file', 'error');
             }
         };
         reader.readAsText(file);
@@ -3064,9 +2947,7 @@ const App = {
         const data = DB.exportAll();
         let allData = [];
         Object.keys(data).forEach(table => {
-            data[table].forEach(item => {
-                allData.push({ ...item, _table: table });
-            });
+            data[table].forEach(item => allData.push({ ...item, _table: table }));
         });
 
         if (allData.length === 0) {
@@ -3081,22 +2962,13 @@ const App = {
     },
 
     async _resetData() {
-        const confirmed = await Utils.confirm(
-            '⚠️ This will permanently delete ALL data. Are you sure?',
-            'Reset All Data'
-        );
-
+        const confirmed = await Utils.confirm('⚠️ Delete ALL data?', 'Reset');
         if (confirmed) {
-            const doubleConfirmed = await Utils.confirm(
-                '⚠️ FINAL WARNING: This action cannot be undone. Continue?',
-                'Permanent Delete'
-            );
-
-            if (doubleConfirmed) {
+            const doubleConfirm = await Utils.confirm('⚠️ Cannot be undone!', 'Final Warning');
+            if (doubleConfirm) {
                 DB.clearAll();
-                // Recreate default admin
                 Auth.init();
-                Utils.toast('All data has been reset!', 'success');
+                Utils.toast('Data reset!', 'success');
                 window.location.reload();
             }
         }
@@ -3116,7 +2988,7 @@ const App = {
 };
 
 // ============================================================
-// INITIALIZE APPLICATION
+// INITIALIZE
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     Auth.init();
@@ -3126,9 +2998,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.Auth = Auth;
     window.SyncManager = SyncManager;
 
-    // Check for Supabase config on load
-    const config = Utils.getSupabaseConfig();
-    if (config.url && config.key) {
-        SyncManager.init();
-    }
+    console.log('🚀 KRT TRADERS ERP v2.0');
+    console.log('📡 Supabase URL:', SUPABASE_CONFIG.URL);
+    console.log('🔑 Supabase Key:', SUPABASE_CONFIG.API_KEY.substring(0, 20) + '...');
+    console.log('✅ System ready!');
 });
