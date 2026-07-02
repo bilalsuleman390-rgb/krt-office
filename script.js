@@ -749,7 +749,7 @@ const Auth = {
         return session && session.role === 'admin';
     },
 
-    _showLogin() {
+    showLogin() {
         const loginPage = document.getElementById('loginPage');
         const app = document.getElementById('app');
         if (loginPage) loginPage.style.display = 'flex';
