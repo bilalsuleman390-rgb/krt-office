@@ -62,6 +62,7 @@
             <div class="header-actions">
                 <span id="live-clock"></span>
                 <button class="sync-btn" onclick="syncAllCloudData()"><i class="fas fa-sync"></i> Sync</button>
+                <button class="sync-btn" style="background:#3498db; margin-left:5px;" onclick="exportAllData()"><i class="fas fa-file-excel"></i> Export</button>
             </div>
         </div>
 
@@ -209,7 +210,7 @@
             </div>
         </div>
 
-        <!-- ===== CUSTOMER LEDGERS - COMPLETE ===== -->
+        <!-- ===== CUSTOMER LEDGERS ===== -->
         <div id="page-customer-ledgers" class="erp-page" style="display:none;">
             <div class="card">
                 <h3 class="card-title"><i class="fas fa-address-book" style="color:#9b59b6;"></i> Customer Ledger System</h3>
@@ -274,15 +275,19 @@
             </div>
         </div>
 
-        <!-- ===== RENT BOOK - COMPLETE ===== -->
+        <!-- ===== RENT BOOK ===== -->
         <div id="page-rent-book" class="erp-page" style="display:none;">
             <div class="card">
                 <h3 class="card-title"><i class="fas fa-building" style="color:#e67e22;"></i> Market Rent Book System</h3>
 
                 <div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px; background:#f8f9fa; padding:15px; border-radius:8px;">
                     <div style="flex:1; min-width:180px;">
+                        <label style="font-size:13px;">Filter by Shopkeeper:</label>
+                        <input type="text" id="rent-filter" placeholder="Type name to filter..." oninput="renderRentTable()" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;" />
+                    </div>
+                    <div style="flex:1; min-width:180px;">
                         <label style="font-size:13px;">Shopkeeper Name:</label>
-                        <input type="text" id="rent-name" placeholder="Enter name" oninput="renderRentTable()" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;" />
+                        <input type="text" id="rent-name" placeholder="Enter name" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;" />
                     </div>
                     <div style="min-width:100px;">
                         <label style="font-size:13px;">Shop No:</label>
@@ -307,6 +312,7 @@
                     <table>
                         <thead>
                             <tr>
+                                <th>Shopkeeper</th>
                                 <th>Shop</th>
                                 <th>Date</th>
                                 <th>Month</th>
@@ -320,7 +326,7 @@
                         <tbody id="rent-main-rows"></tbody>
                         <tfoot>
                             <tr style="background:#2c3e50; color:white; font-weight:bold;">
-                                <td colspan="3" style="text-align:right;">Grand Total:</td>
+                                <td colspan="4" style="text-align:right;">Grand Total:</td>
                                 <td id="rent-total-debit">0</td>
                                 <td id="rent-total-credit">0</td>
                                 <td>Balance:</td>
