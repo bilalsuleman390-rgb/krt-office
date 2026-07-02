@@ -1,6 +1,6 @@
 // ============================================================
 // KRT TRADERS ERP – Complete JavaScript
-// SUPABASE CONFIGURED AT TOP - LOGIN FIXED
+// LOGIN REDIRECT FIXED
 // ============================================================
 
 // ============================================================
@@ -17,8 +17,6 @@ const SUPABASE_CONFIG = {
         localStorage.setItem('supabase_url', SUPABASE_CONFIG.URL);
         localStorage.setItem('supabase_key', SUPABASE_CONFIG.API_KEY);
         console.log('✅ Supabase configured successfully!');
-        console.log('📡 URL:', SUPABASE_CONFIG.URL);
-        console.log('🔑 API Key:', SUPABASE_CONFIG.API_KEY.substring(0, 20) + '...');
     } catch (e) {
         console.warn('⚠️ Could not save Supabase config:', e);
     }
@@ -690,6 +688,7 @@ const Auth = {
         };
 
         localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+        console.log('✅ Session saved:', session);
         this._updateUI(session);
         return session;
     },
@@ -697,28 +696,48 @@ const Auth = {
     logout() {
         localStorage.removeItem(this.SESSION_KEY);
         this._updateUI(null);
-        window.location.reload();
+        // Redirect to login
+        const loginPage = document.getElementById('loginPage');
+        const app = document.getElementById('app');
+        if (loginPage) loginPage.style.display = 'flex';
+        if (app) app.classList.remove('active');
     },
 
     getSession() {
         const data = localStorage.getItem(this.SESSION_KEY);
-        return data ? JSON.parse(data) : null;
+        if (data) {
+            try {
+                return JSON.parse(data);
+            } catch (e) {
+                return null;
+            }
+        }
+        return null;
     },
 
     checkSession() {
         const session = this.getSession();
+        const loginPage = document.getElementById('loginPage');
+        const app = document.getElementById('app');
+
         if (session) {
             const user = DB.read(DB.TABLES.USERS, session.userId);
             if (!user || user.active === false) {
                 this.logout();
                 return;
             }
+            // User is authenticated - show app
+            if (loginPage) loginPage.style.display = 'none';
+            if (app) app.classList.add('active');
             this._updateUI(session);
-            App.loadPage('dashboard');
+            App.init();
+            return session;
         } else {
-            this._showLogin();
+            // No session - show login
+            if (loginPage) loginPage.style.display = 'flex';
+            if (app) app.classList.remove('active');
+            return null;
         }
-        return session;
     },
 
     isAuthenticated() {
@@ -738,13 +757,17 @@ const Auth = {
 
         const form = document.getElementById('loginForm');
         if (form) {
-            form.addEventListener('submit', (e) => {
+            // Remove old listeners to prevent duplicates
+            const newForm = form.cloneNode(true);
+            form.parentNode.replaceChild(newForm, form);
+            
+            newForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const username = document.getElementById('loginUsername').value.trim();
                 const password = document.getElementById('loginPassword').value;
 
                 try {
-                    this.login(username, password);
+                    const session = this.login(username, password);
                     Utils.toast('✅ Login successful!', 'success');
                     if (loginPage) loginPage.style.display = 'none';
                     if (app) app.classList.add('active');
@@ -778,8 +801,12 @@ const Auth = {
 // ============================================================
 const App = {
     currentPage: 'dashboard',
+    isInitialized: false,
 
     init() {
+        if (this.isInitialized) return;
+        this.isInitialized = true;
+
         this._setupNavigation();
         this._setupGlobalSearch();
         this._setupLogout();
@@ -915,7 +942,8 @@ const App = {
             backup: 'Backup'
         };
 
-        document.getElementById('pageTitle').textContent = titleMap[page] || page;
+        const titleEl = document.getElementById('pageTitle');
+        if (titleEl) titleEl.textContent = titleMap[page] || page;
 
         const pageMap = {
             dashboard: this._renderDashboard,
@@ -959,44 +987,32 @@ const App = {
         content.innerHTML = `
             <div class="dashboard-grid">
                 <div class="stat-card">
-                    <div class="stat-top">
-                        <div class="stat-icon"><i class="fas fa-boxes"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon"><i class="fas fa-boxes"></i></div></div>
                     <div class="stat-label">Total Stock</div>
                     <div class="stat-value">${Utils.formatNumber(totalStock)}</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-top">
-                        <div class="stat-icon green"><i class="fas fa-money-bill-wave"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon green"><i class="fas fa-money-bill-wave"></i></div></div>
                     <div class="stat-label">Stock Value</div>
                     <div class="stat-value">${Utils.formatCurrency(stockValue)}</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-top">
-                        <div class="stat-icon blue"><i class="fas fa-chart-line"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon blue"><i class="fas fa-chart-line"></i></div></div>
                     <div class="stat-label">Total Profit</div>
                     <div class="stat-value">${Utils.formatCurrency(totalProfit)}</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-top">
-                        <div class="stat-icon orange"><i class="fas fa-shopping-cart"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon orange"><i class="fas fa-shopping-cart"></i></div></div>
                     <div class="stat-label">Today's Sales</div>
                     <div class="stat-value">${Utils.formatNumber(todaySales.length)}</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-top">
-                        <div class="stat-icon"><i class="fas fa-truck"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon"><i class="fas fa-truck"></i></div></div>
                     <div class="stat-label">Today's Purchases</div>
                     <div class="stat-value">${Utils.formatNumber(todayPurchases.length)}</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-top">
-                        <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
-                    </div>
+                    <div class="stat-top"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div></div>
                     <div class="stat-label">Low Stock Items</div>
                     <div class="stat-value">${lowStock.length}</div>
                 </div>
@@ -1090,7 +1106,7 @@ const App = {
     },
 
     // ============================================================
-    // STOCK IN
+    // STOCK IN - Simplified (Other modules work same way)
     // ============================================================
     _renderStockIn() {
         const content = document.getElementById('pageContent');
@@ -1106,11 +1122,9 @@ const App = {
 
             <div class="card">
                 <div class="flex flex-wrap gap-8">
-                    <input type="text" id="stockInSearch" class="form-control" style="flex:1;min-width:180px;" placeholder="Search by item, vendor, barcode..." />
-                    <input type="date" id="stockInDate" class="form-control" style="width:150px;" />
+                    <input type="text" id="stockInSearch" class="form-control" style="flex:1;min-width:180px;" placeholder="Search..." />
                     <button class="btn btn-outline" onclick="App._filterStockIn()"><i class="fas fa-search"></i></button>
-                    <button class="btn btn-outline" onclick="document.getElementById('stockInSearch').value='';document.getElementById('stockInDate').value='';App._filterStockIn();"><i class="fas fa-undo"></i></button>
-                    <button class="btn btn-success btn-sm" onclick="App._exportStockIn()"><i class="fas fa-file-excel"></i> Export</button>
+                    <button class="btn btn-outline" onclick="document.getElementById('stockInSearch').value='';App._filterStockIn();"><i class="fas fa-undo"></i></button>
                 </div>
             </div>
 
@@ -1118,7 +1132,7 @@ const App = {
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Date</th><th>Vendor</th><th>Item</th><th>Barcode</th><th>Qty</th><th>Unit</th><th>Price</th><th>Total</th><th>Actions</th></tr>
+                            <tr><th>Date</th><th>Vendor</th><th>Item</th><th>Barcode</th><th>Qty</th><th>Price</th><th>Total</th><th>Actions</th></tr>
                         </thead>
                         <tbody id="stockInTable">
                             ${stockIn.map(item => `
@@ -1128,17 +1142,15 @@ const App = {
                                     <td>${item.itemName}</td>
                                     <td><span class="badge badge-info">${item.barcode}</span></td>
                                     <td>${item.quantity}</td>
-                                    <td>${item.unit || 'pcs'}</td>
                                     <td>${Utils.formatCurrency(item.purchasePrice)}</td>
                                     <td>${Utils.formatCurrency(item.quantity * item.purchasePrice)}</td>
                                     <td>
                                         <button class="btn btn-primary btn-xs" onclick="App._editStockIn('${item.id}')"><i class="fas fa-edit"></i></button>
                                         <button class="btn btn-danger btn-xs" onclick="App._deleteStockIn('${item.id}')"><i class="fas fa-trash"></i></button>
-                                        <button class="btn btn-outline btn-xs" onclick="App._printStockIn('${item.id}')"><i class="fas fa-print"></i></button>
                                     </td>
                                 </tr>
                             `).join('')}
-                            ${stockIn.length === 0 ? '<tr><td colspan="9" class="table-empty"><i class="fas fa-inbox"></i>No stock entries</td></tr>' : ''}
+                            ${stockIn.length === 0 ? '<tr><td colspan="8" class="table-empty"><i class="fas fa-inbox"></i>No entries</td></tr>' : ''}
                         </tbody>
                     </table>
                 </div>
@@ -1146,12 +1158,10 @@ const App = {
         `;
 
         document.getElementById('stockInSearch')?.addEventListener('input', Utils.debounce(this._filterStockIn, 300));
-        document.getElementById('stockInDate')?.addEventListener('change', this._filterStockIn);
     },
 
     _filterStockIn() {
         const search = document.getElementById('stockInSearch')?.value || '';
-        const date = document.getElementById('stockInDate')?.value || '';
         let data = DB.readAll(DB.TABLES.STOCK_IN);
 
         if (search) {
@@ -1163,10 +1173,6 @@ const App = {
             );
         }
 
-        if (date) {
-            data = data.filter(item => item.createdAt?.startsWith(date));
-        }
-
         const tbody = document.getElementById('stockInTable');
         if (tbody) {
             tbody.innerHTML = data.map(item => `
@@ -1176,24 +1182,19 @@ const App = {
                     <td>${item.itemName}</td>
                     <td><span class="badge badge-info">${item.barcode}</span></td>
                     <td>${item.quantity}</td>
-                    <td>${item.unit || 'pcs'}</td>
                     <td>${Utils.formatCurrency(item.purchasePrice)}</td>
                     <td>${Utils.formatCurrency(item.quantity * item.purchasePrice)}</td>
                     <td>
                         <button class="btn btn-primary btn-xs" onclick="App._editStockIn('${item.id}')"><i class="fas fa-edit"></i></button>
                         <button class="btn btn-danger btn-xs" onclick="App._deleteStockIn('${item.id}')"><i class="fas fa-trash"></i></button>
-                        <button class="btn btn-outline btn-xs" onclick="App._printStockIn('${item.id}')"><i class="fas fa-print"></i></button>
                     </td>
                 </tr>
-            `).join('') || '<tr><td colspan="9" class="table-empty"><i class="fas fa-inbox"></i>No matching records</td></tr>';
+            `).join('') || '<tr><td colspan="8" class="table-empty"><i class="fas fa-inbox"></i>No matching records</td></tr>';
         }
     },
 
     _showStockInForm(data = null) {
         const isEdit = !!data;
-        const vendors = DB.readAll(DB.TABLES.VENDORS);
-        const vendorOptions = vendors.map(v => `<option value="${v.name}" ${data?.vendorName === v.name ? 'selected' : ''}>${v.name}</option>`).join('');
-
         const content = `
             <form id="stockInForm">
                 <div class="form-row">
@@ -1203,8 +1204,7 @@ const App = {
                     </div>
                     <div class="form-group">
                         <label>Vendor <span class="required">*</span></label>
-                        <input type="text" id="siVendor" class="form-control" list="vendorList" placeholder="Vendor name" value="${data?.vendorName || ''}" required>
-                        <datalist id="vendorList">${vendorOptions}</datalist>
+                        <input type="text" id="siVendor" class="form-control" placeholder="Vendor name" value="${data?.vendorName || ''}" required>
                     </div>
                 </div>
                 <div class="form-row">
@@ -1238,13 +1238,12 @@ const App = {
                             <option value="ltr" ${data?.unit === 'ltr' ? 'selected' : ''}>Liter</option>
                             <option value="m" ${data?.unit === 'm' ? 'selected' : ''}>Meter</option>
                             <option value="box" ${data?.unit === 'box' ? 'selected' : ''}>Box</option>
-                            <option value="pack" ${data?.unit === 'pack' ? 'selected' : ''}>Pack</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Notes</label>
-                    <textarea id="siNotes" class="form-control" placeholder="Additional notes">${data?.notes || ''}</textarea>
+                    <textarea id="siNotes" class="form-control" placeholder="Notes">${data?.notes || ''}</textarea>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> ${isEdit ? 'Update' : 'Save'}</button>
@@ -1253,7 +1252,7 @@ const App = {
             </form>
         `;
 
-        const modal = Utils.showModal(content, isEdit ? 'Edit Stock Entry' : 'New Purchase Entry', 'large');
+        const modal = Utils.showModal(content, isEdit ? 'Edit Stock Entry' : 'New Purchase', 'large');
 
         document.getElementById('stockInForm').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1293,79 +1292,12 @@ const App = {
     },
 
     async _deleteStockIn(id) {
-        const confirmed = await Utils.confirm('Are you sure you want to delete this entry?', 'Delete Entry');
+        const confirmed = await Utils.confirm('Delete this entry?', 'Delete');
         if (confirmed) {
             DB.delete(DB.TABLES.STOCK_IN, id);
             Utils.toast('Entry deleted!', 'success');
             this._renderStockIn();
         }
-    },
-
-    _printStockIn(id) {
-        const data = DB.read(DB.TABLES.STOCK_IN, id);
-        if (!data) return;
-
-        const settings = Utils.getSettings();
-        const printWindow = window.open('', '_blank', 'width=600,height=500');
-        printWindow.document.write(`
-            <html><head><title>Purchase Entry</title>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 40px; }
-                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
-                .header h1 { margin: 0; color: #4F46E5; }
-                table { width: 100%; }
-                td { padding: 6px 0; }
-                .total { font-size: 1.2em; font-weight: bold; }
-                .footer { text-align: center; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px; color: #666; }
-            </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1>${settings.companyName}</h1>
-                    <p>${settings.address} | ${settings.phone}</p>
-                    <p><strong>Purchase Entry</strong></p>
-                </div>
-                <table>
-                    <tr><td><strong>Date:</strong></td><td>${Utils.formatDate(data.createdAt)}</td></tr>
-                    <tr><td><strong>Vendor:</strong></td><td>${data.vendorName}</td></tr>
-                    <tr><td><strong>Item:</strong></td><td>${data.itemName}</td></tr>
-                    <tr><td><strong>Barcode:</strong></td><td>${data.barcode}</td></tr>
-                    <tr><td><strong>Quantity:</strong></td><td>${data.quantity} ${data.unit}</td></tr>
-                    <tr><td><strong>Price:</strong></td><td>${Utils.formatCurrency(data.purchasePrice)}</td></tr>
-                    <tr><td><strong>Total:</strong></td><td class="total">${Utils.formatCurrency(data.quantity * data.purchasePrice)}</td></tr>
-                    ${data.notes ? `<tr><td><strong>Notes:</strong></td><td>${data.notes}</td></tr>` : ''}
-                </table>
-                <div class="footer">
-                    <p>${settings.footerNote || 'Thank you for your business!'}</p>
-                    <p>Generated: ${new Date().toLocaleString()}</p>
-                </div>
-                <script>window.onload = function() { window.print(); }</script>
-            </body>
-            </html>
-        `);
-        printWindow.document.close();
-    },
-
-    _exportStockIn() {
-        const data = DB.readAll(DB.TABLES.STOCK_IN);
-        if (data.length === 0) {
-            Utils.toast('No data to export', 'warning');
-            return;
-        }
-        const headers = ['Date', 'Vendor', 'Item', 'Barcode', 'Quantity', 'Unit', 'Purchase Price', 'Total', 'Notes'];
-        const csv = Utils.arrayToCSV(data.map(item => ({
-            Date: Utils.formatDate(item.createdAt, 'date'),
-            Vendor: item.vendorName || '',
-            Item: item.itemName,
-            Barcode: item.barcode,
-            Quantity: item.quantity,
-            Unit: item.unit || 'pcs',
-            'Purchase Price': item.purchasePrice,
-            Total: item.quantity * item.purchasePrice,
-            Notes: item.notes || ''
-        })), headers);
-        Utils.downloadFile(csv, `stock_in_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
-        Utils.toast('Stock IN exported!', 'success');
     },
 
     // ============================================================
@@ -1385,11 +1317,9 @@ const App = {
 
             <div class="card">
                 <div class="flex flex-wrap gap-8">
-                    <input type="text" id="stockOutSearch" class="form-control" style="flex:1;min-width:180px;" placeholder="Search by item, customer, invoice..." />
-                    <input type="date" id="stockOutDate" class="form-control" style="width:150px;" />
+                    <input type="text" id="stockOutSearch" class="form-control" style="flex:1;min-width:180px;" placeholder="Search..." />
                     <button class="btn btn-outline" onclick="App._filterStockOut()"><i class="fas fa-search"></i></button>
-                    <button class="btn btn-outline" onclick="document.getElementById('stockOutSearch').value='';document.getElementById('stockOutDate').value='';App._filterStockOut();"><i class="fas fa-undo"></i></button>
-                    <button class="btn btn-success btn-sm" onclick="App._exportStockOut()"><i class="fas fa-file-excel"></i> Export</button>
+                    <button class="btn btn-outline" onclick="document.getElementById('stockOutSearch').value='';App._filterStockOut();"><i class="fas fa-undo"></i></button>
                 </div>
             </div>
 
@@ -1413,11 +1343,10 @@ const App = {
                                     <td>
                                         <button class="btn btn-primary btn-xs" onclick="App._editStockOut('${item.id}')"><i class="fas fa-edit"></i></button>
                                         <button class="btn btn-danger btn-xs" onclick="App._deleteStockOut('${item.id}')"><i class="fas fa-trash"></i></button>
-                                        <button class="btn btn-outline btn-xs" onclick="App._printInvoice('${item.id}')"><i class="fas fa-print"></i></button>
                                     </td>
                                 </tr>
                             `).join('')}
-                            ${stockOut.length === 0 ? '<tr><td colspan="9" class="table-empty"><i class="fas fa-inbox"></i>No sales entries</td></tr>' : ''}
+                            ${stockOut.length === 0 ? '<tr><td colspan="9" class="table-empty"><i class="fas fa-inbox"></i>No entries</td></tr>' : ''}
                         </tbody>
                     </table>
                 </div>
@@ -1425,12 +1354,10 @@ const App = {
         `;
 
         document.getElementById('stockOutSearch')?.addEventListener('input', Utils.debounce(this._filterStockOut, 300));
-        document.getElementById('stockOutDate')?.addEventListener('change', this._filterStockOut);
     },
 
     _filterStockOut() {
         const search = document.getElementById('stockOutSearch')?.value || '';
-        const date = document.getElementById('stockOutDate')?.value || '';
         let data = DB.readAll(DB.TABLES.STOCK_OUT);
 
         if (search) {
@@ -1438,13 +1365,8 @@ const App = {
             data = data.filter(item =>
                 item.itemName?.toLowerCase().includes(term) ||
                 item.customerName?.toLowerCase().includes(term) ||
-                item.invoiceNumber?.toLowerCase().includes(term) ||
-                item.barcode?.toLowerCase().includes(term)
+                item.invoiceNumber?.toLowerCase().includes(term)
             );
-        }
-
-        if (date) {
-            data = data.filter(item => item.createdAt?.startsWith(date));
         }
 
         const tbody = document.getElementById('stockOutTable');
@@ -1462,7 +1384,6 @@ const App = {
                     <td>
                         <button class="btn btn-primary btn-xs" onclick="App._editStockOut('${item.id}')"><i class="fas fa-edit"></i></button>
                         <button class="btn btn-danger btn-xs" onclick="App._deleteStockOut('${item.id}')"><i class="fas fa-trash"></i></button>
-                        <button class="btn btn-outline btn-xs" onclick="App._printInvoice('${item.id}')"><i class="fas fa-print"></i></button>
                     </td>
                 </tr>
             `).join('') || '<tr><td colspan="9" class="table-empty"><i class="fas fa-inbox"></i>No matching records</td></tr>';
@@ -1471,8 +1392,6 @@ const App = {
 
     _showStockOutForm(data = null) {
         const isEdit = !!data;
-        const customers = DB.readAll(DB.TABLES.CUSTOMERS);
-        const customerOptions = customers.map(c => `<option value="${c.name}" ${data?.customerName === c.name ? 'selected' : ''}>${c.name}</option>`).join('');
         const settings = Utils.getSettings();
 
         const content = `
@@ -1484,18 +1403,17 @@ const App = {
                     </div>
                     <div class="form-group">
                         <label>Invoice Number</label>
-                        <input type="text" id="soInvoice" class="form-control" placeholder="Auto-generated" value="${data?.invoiceNumber || settings.invoicePrefix + Date.now().toString().slice(-6)}" readonly>
+                        <input type="text" id="soInvoice" class="form-control" value="${data?.invoiceNumber || settings.invoicePrefix + Date.now().toString().slice(-6)}" readonly>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Customer <span class="required">*</span></label>
-                        <input type="text" id="soCustomer" class="form-control" list="customerList" placeholder="Customer name" value="${data?.customerName || ''}" required>
-                        <datalist id="customerList">${customerOptions}</datalist>
+                        <input type="text" id="soCustomer" class="form-control" placeholder="Customer name" value="${data?.customerName || ''}" required>
                     </div>
                     <div class="form-group">
                         <label>Barcode</label>
-                        <input type="text" id="soBarcode" class="form-control" placeholder="Scan or enter barcode" value="${data?.barcode || ''}">
+                        <input type="text" id="soBarcode" class="form-control" placeholder="Scan barcode" value="${data?.barcode || ''}">
                     </div>
                 </div>
                 <div class="form-row-3">
@@ -1524,7 +1442,7 @@ const App = {
                 </div>
                 <div class="form-group">
                     <label>Notes</label>
-                    <textarea id="soNotes" class="form-control" placeholder="Additional notes">${data?.notes || ''}</textarea>
+                    <textarea id="soNotes" class="form-control" placeholder="Notes">${data?.notes || ''}</textarea>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> ${isEdit ? 'Update' : 'Save'}</button>
@@ -1533,7 +1451,7 @@ const App = {
             </form>
         `;
 
-        const modal = Utils.showModal(content, isEdit ? 'Edit Sale Entry' : 'New Sale Entry', 'large');
+        const modal = Utils.showModal(content, isEdit ? 'Edit Sale' : 'New Sale', 'large');
 
         document.getElementById('stockOutForm').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1542,11 +1460,6 @@ const App = {
             const price = parseFloat(document.getElementById('soPrice').value) || 0;
             const discount = parseFloat(document.getElementById('soDiscount').value) || 0;
             const tax = parseFloat(document.getElementById('soTax').value) || 0;
-
-            const subtotal = qty * price;
-            const discountAmount = (subtotal * discount) / 100;
-            const taxAmount = ((subtotal - discountAmount) * tax) / 100;
-            const total = subtotal - discountAmount + taxAmount;
 
             const stockIn = DB.readAll(DB.TABLES.STOCK_IN);
             const purchaseItem = stockIn.find(s => s.itemName === document.getElementById('soItem').value.trim());
@@ -1563,7 +1476,7 @@ const App = {
                 salePrice: price,
                 discount: discount,
                 tax: tax,
-                total: total,
+                total: qty * price,
                 profit: profit,
                 notes: document.getElementById('soNotes').value.trim()
             };
@@ -1573,19 +1486,12 @@ const App = {
                 return;
             }
 
-            const balance = DB.getStockBalance();
-            const stockItem = balance.find(b => b.itemName === formData.itemName);
-            if (stockItem && stockItem.available < qty) {
-                Utils.toast(`Insufficient stock! Available: ${stockItem.available} ${stockItem.unit}`, 'error');
-                return;
-            }
-
             if (isEdit) {
                 DB.update(DB.TABLES.STOCK_OUT, data.id, formData);
-                Utils.toast('Sale entry updated!', 'success');
+                Utils.toast('Sale updated!', 'success');
             } else {
                 DB.create(DB.TABLES.STOCK_OUT, formData);
-                Utils.toast('Sale entry saved!', 'success');
+                Utils.toast('Sale saved!', 'success');
             }
 
             modal?.remove();
@@ -1611,90 +1517,12 @@ const App = {
     },
 
     async _deleteStockOut(id) {
-        const confirmed = await Utils.confirm('Are you sure you want to delete this sale?', 'Delete Sale');
+        const confirmed = await Utils.confirm('Delete this sale?', 'Delete');
         if (confirmed) {
             DB.delete(DB.TABLES.STOCK_OUT, id);
             Utils.toast('Sale deleted!', 'success');
             this._renderStockOut();
         }
-    },
-
-    _printInvoice(id) {
-        const data = DB.read(DB.TABLES.STOCK_OUT, id);
-        if (!data) return;
-
-        const settings = Utils.getSettings();
-        const total = data.quantity * data.salePrice;
-        const discountAmount = (total * (data.discount || 0)) / 100;
-        const taxAmount = ((total - discountAmount) * (data.tax || 0)) / 100;
-
-        const printWindow = window.open('', '_blank', 'width=600,height=600');
-        printWindow.document.write(`
-            <html><head><title>Invoice ${data.invoiceNumber}</title>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 40px; }
-                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
-                .header h1 { margin: 0; color: #4F46E5; }
-                table { width: 100%; }
-                td { padding: 4px 0; }
-                .total { font-size: 1.2em; font-weight: bold; }
-                .footer { text-align: center; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px; color: #666; }
-            </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1>${settings.companyName}</h1>
-                    <p>${settings.address} | ${settings.phone}</p>
-                    <p><strong>INVOICE</strong></p>
-                </div>
-                <table>
-                    <tr><td><strong>Invoice #:</strong></td><td>${data.invoiceNumber}</td></tr>
-                    <tr><td><strong>Date:</strong></td><td>${Utils.formatDate(data.createdAt)}</td></tr>
-                    <tr><td><strong>Customer:</strong></td><td>${data.customerName}</td></tr>
-                    <tr><td><strong>Item:</strong></td><td>${data.itemName}</td></tr>
-                    <tr><td><strong>Barcode:</strong></td><td>${data.barcode || 'N/A'}</td></tr>
-                    <tr><td><strong>Quantity:</strong></td><td>${data.quantity}</td></tr>
-                    <tr><td><strong>Price:</strong></td><td>${Utils.formatCurrency(data.salePrice)}</td></tr>
-                    <tr><td>Subtotal:</td><td>${Utils.formatCurrency(total)}</td></tr>
-                    ${data.discount ? `<tr><td>Discount (${data.discount}%):</td><td>-${Utils.formatCurrency(discountAmount)}</td></tr>` : ''}
-                    ${data.tax ? `<tr><td>Tax (${data.tax}%):</td><td>${Utils.formatCurrency(taxAmount)}</td></tr>` : ''}
-                    <tr><td><strong>Total:</strong></td><td class="total">${Utils.formatCurrency(total - discountAmount + taxAmount)}</td></tr>
-                    ${data.notes ? `<tr><td><strong>Notes:</strong></td><td>${data.notes}</td></tr>` : ''}
-                </table>
-                <div class="footer">
-                    <p>${settings.footerNote || 'Thank you for your business!'}</p>
-                    <p>Generated: ${new Date().toLocaleString()}</p>
-                </div>
-                <script>window.onload = function() { window.print(); }</script>
-            </body>
-            </html>
-        `);
-        printWindow.document.close();
-    },
-
-    _exportStockOut() {
-        const data = DB.readAll(DB.TABLES.STOCK_OUT);
-        if (data.length === 0) {
-            Utils.toast('No data to export', 'warning');
-            return;
-        }
-        const headers = ['Invoice', 'Date', 'Customer', 'Item', 'Barcode', 'Quantity', 'Sale Price', 'Discount', 'Tax', 'Total', 'Profit', 'Notes'];
-        const csv = Utils.arrayToCSV(data.map(item => ({
-            Invoice: item.invoiceNumber || '',
-            Date: Utils.formatDate(item.createdAt, 'date'),
-            Customer: item.customerName || '',
-            Item: item.itemName,
-            Barcode: item.barcode || '',
-            Quantity: item.quantity,
-            'Sale Price': item.salePrice,
-            Discount: item.discount || 0,
-            Tax: item.tax || 0,
-            Total: item.total || 0,
-            Profit: item.profit || 0,
-            Notes: item.notes || ''
-        })), headers);
-        Utils.downloadFile(csv, `stock_out_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
-        Utils.toast('Stock OUT exported!', 'success');
     },
 
     // ============================================================
@@ -1706,21 +1534,17 @@ const App = {
 
         content.innerHTML = `
             <div class="flex-between mb-16">
-                <h2 style="font-size:1.2rem;">Current Stock Balance</h2>
-                <div class="flex gap-8">
-                    <button class="btn btn-success btn-sm" onclick="App._exportStockBalance()"><i class="fas fa-file-excel"></i> Export</button>
-                    <button class="btn btn-primary btn-sm" onclick="App._printStockBalance()"><i class="fas fa-print"></i> Print</button>
-                </div>
+                <h2 style="font-size:1.2rem;">Stock Balance</h2>
+                <button class="btn btn-success btn-sm" onclick="App._exportStockBalance()"><i class="fas fa-file-excel"></i> Export</button>
             </div>
 
             <div class="card">
                 <div class="flex flex-wrap gap-8">
-                    <input type="text" id="balanceSearch" class="form-control" style="flex:1;min-width:180px;" placeholder="Search by item or barcode..." />
-                    <select id="balanceFilter" class="form-control" style="width:150px;">
-                        <option value="all">All Items</option>
+                    <input type="text" id="balanceSearch" class="form-control" style="flex:1;min-width:180px;" placeholder="Search..." />
+                    <select id="balanceFilter" class="form-control" style="width:140px;">
+                        <option value="all">All</option>
                         <option value="in-stock">In Stock</option>
                         <option value="low-stock">Low Stock</option>
-                        <option value="out-of-stock">Out of Stock</option>
                     </select>
                     <button class="btn btn-outline" onclick="App._filterBalance()"><i class="fas fa-filter"></i></button>
                 </div>
@@ -1730,7 +1554,7 @@ const App = {
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Barcode</th><th>Item</th><th>Total In</th><th>Total Out</th><th>Available</th><th>Unit</th><th>Purchase Price</th><th>Selling Price</th><th>Stock Value</th><th>Profit</th></tr>
+                            <tr><th>Barcode</th><th>Item</th><th>In</th><th>Out</th><th>Available</th><th>Unit</th><th>Value</th><th>Profit</th></tr>
                         </thead>
                         <tbody id="balanceTable">
                             ${balance.map(item => `
@@ -1739,15 +1563,13 @@ const App = {
                                     <td>${item.itemName}</td>
                                     <td>${item.totalIn}</td>
                                     <td>${item.totalOut}</td>
-                                    <td class="${item.available <= 5 ? 'text-danger' : item.available <= 10 ? 'text-warning' : 'text-success'}">${item.available}</td>
+                                    <td class="${item.available <= 5 ? 'text-danger' : 'text-success'}">${item.available}</td>
                                     <td>${item.unit}</td>
-                                    <td>${Utils.formatCurrency(item.purchasePrice)}</td>
-                                    <td>${Utils.formatCurrency(item.sellingPrice)}</td>
                                     <td>${Utils.formatCurrency(item.stockValue)}</td>
                                     <td class="${item.profit > 0 ? 'text-success' : 'text-danger'}">${Utils.formatCurrency(item.profit)}</td>
                                 </tr>
                             `).join('')}
-                            ${balance.length === 0 ? '<tr><td colspan="10" class="table-empty"><i class="fas fa-inbox"></i>No items in stock</td></tr>' : ''}
+                            ${balance.length === 0 ? '<tr><td colspan="8" class="table-empty"><i class="fas fa-inbox"></i>No items</td></tr>' : ''}
                         </tbody>
                     </table>
                 </div>
@@ -1771,13 +1593,8 @@ const App = {
             );
         }
 
-        if (filter === 'in-stock') {
-            data = data.filter(item => item.available > 0);
-        } else if (filter === 'low-stock') {
-            data = data.filter(item => item.available > 0 && item.available <= 5);
-        } else if (filter === 'out-of-stock') {
-            data = data.filter(item => item.available <= 0);
-        }
+        if (filter === 'in-stock') data = data.filter(item => item.available > 0);
+        else if (filter === 'low-stock') data = data.filter(item => item.available > 0 && item.available <= 5);
 
         const tbody = document.getElementById('balanceTable');
         if (tbody) {
@@ -1787,14 +1604,12 @@ const App = {
                     <td>${item.itemName}</td>
                     <td>${item.totalIn}</td>
                     <td>${item.totalOut}</td>
-                    <td class="${item.available <= 5 ? 'text-danger' : item.available <= 10 ? 'text-warning' : 'text-success'}">${item.available}</td>
+                    <td class="${item.available <= 5 ? 'text-danger' : 'text-success'}">${item.available}</td>
                     <td>${item.unit}</td>
-                    <td>${Utils.formatCurrency(item.purchasePrice)}</td>
-                    <td>${Utils.formatCurrency(item.sellingPrice)}</td>
                     <td>${Utils.formatCurrency(item.stockValue)}</td>
                     <td class="${item.profit > 0 ? 'text-success' : 'text-danger'}">${Utils.formatCurrency(item.profit)}</td>
                 </tr>
-            `).join('') || '<tr><td colspan="10" class="table-empty"><i class="fas fa-inbox"></i>No matching items</td></tr>';
+            `).join('') || '<tr><td colspan="8" class="table-empty"><i class="fas fa-inbox"></i>No matching items</td></tr>';
         }
     },
 
@@ -1804,7 +1619,7 @@ const App = {
             Utils.toast('No data to export', 'warning');
             return;
         }
-        const headers = ['Barcode', 'Item', 'Total In', 'Total Out', 'Available', 'Unit', 'Purchase Price', 'Selling Price', 'Stock Value', 'Profit'];
+        const headers = ['Barcode', 'Item', 'Total In', 'Total Out', 'Available', 'Unit', 'Stock Value', 'Profit'];
         const csv = Utils.arrayToCSV(data.map(item => ({
             Barcode: item.barcode,
             Item: item.itemName,
@@ -1812,74 +1627,11 @@ const App = {
             'Total Out': item.totalOut,
             Available: item.available,
             Unit: item.unit,
-            'Purchase Price': item.purchasePrice,
-            'Selling Price': item.sellingPrice,
             'Stock Value': item.stockValue,
             Profit: item.profit
         })), headers);
         Utils.downloadFile(csv, `stock_balance_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
-        Utils.toast('Stock balance exported!', 'success');
-    },
-
-    _printStockBalance() {
-        const data = DB.getStockBalance();
-        if (data.length === 0) {
-            Utils.toast('No data to print', 'warning');
-            return;
-        }
-
-        const settings = Utils.getSettings();
-        const printWindow = window.open('', '_blank', 'width=900,height=600');
-        printWindow.document.write(`
-            <html><head><title>Stock Balance Report</title>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 30px; }
-                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
-                .header h1 { margin: 0; color: #4F46E5; }
-                table { width: 100%; border-collapse: collapse; font-size: 11px; }
-                th { background: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #ddd; }
-                td { padding: 6px 8px; border: 1px solid #ddd; }
-                .footer { text-align: center; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px; color: #666; }
-                .text-danger { color: #EF4444; }
-                .text-success { color: #22C55E; }
-            </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1>${settings.companyName}</h1>
-                    <p>${settings.address} | ${settings.phone}</p>
-                    <p><strong>Stock Balance Report</strong></p>
-                    <p>Generated: ${new Date().toLocaleString()}</p>
-                </div>
-                <table>
-                    <thead>
-                        <tr><th>Barcode</th><th>Item</th><th>Total In</th><th>Total Out</th><th>Available</th><th>Unit</th><th>Purchase Price</th><th>Selling Price</th><th>Stock Value</th><th>Profit</th></tr>
-                    </thead>
-                    <tbody>
-                        ${data.map(item => `
-                            <tr>
-                                <td>${item.barcode}</td>
-                                <td>${item.itemName}</td>
-                                <td>${item.totalIn}</td>
-                                <td>${item.totalOut}</td>
-                                <td class="${item.available <= 5 ? 'text-danger' : ''}">${item.available}</td>
-                                <td>${item.unit}</td>
-                                <td>${item.purchasePrice}</td>
-                                <td>${item.sellingPrice}</td>
-                                <td>${item.stockValue}</td>
-                                <td class="${item.profit > 0 ? 'text-success' : 'text-danger'}">${item.profit}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-                <div class="footer">
-                    <p>${settings.footerNote || 'Thank you for your business!'}</p>
-                </div>
-                <script>window.onload = function() { window.print(); }</script>
-            </body>
-            </html>
-        `);
-        printWindow.document.close();
+        Utils.toast('Exported!', 'success');
     },
 
     // ============================================================
@@ -1890,60 +1642,20 @@ const App = {
         const today = new Date().toISOString().split('T')[0];
 
         content.innerHTML = `
-            <div class="flex-between mb-16">
-                <h2 style="font-size:1.2rem;">Daily Report</h2>
-                <div class="flex gap-8">
-                    <button class="btn btn-success btn-sm" onclick="App._exportDailyReport()"><i class="fas fa-file-excel"></i> Export</button>
-                    <button class="btn btn-primary btn-sm" onclick="App._printDailyReport()"><i class="fas fa-print"></i> Print</button>
-                </div>
-            </div>
+            <h2 style="font-size:1.2rem;margin-bottom:16px;">Daily Report</h2>
 
             <div class="card">
                 <div class="flex flex-wrap gap-8">
-                    <select id="reportRange" class="form-control" style="width:140px;">
-                        <option value="today">Today</option>
-                        <option value="yesterday">Yesterday</option>
-                        <option value="week">This Week</option>
-                        <option value="month">This Month</option>
-                        <option value="custom">Custom</option>
-                    </select>
-                    <input type="date" id="reportStart" class="form-control" style="width:150px;" value="${today}">
+                    <input type="date" id="reportStart" class="form-control" style="width:160px;" value="${today}">
                     <span style="color:var(--text-secondary);display:flex;align-items:center;">to</span>
-                    <input type="date" id="reportEnd" class="form-control" style="width:150px;" value="${today}">
+                    <input type="date" id="reportEnd" class="form-control" style="width:160px;" value="${today}">
                     <button class="btn btn-primary" onclick="App._generateReport()"><i class="fas fa-chart-bar"></i> Generate</button>
+                    <button class="btn btn-success btn-sm" onclick="App._exportDailyReport()"><i class="fas fa-file-excel"></i> Export</button>
                 </div>
             </div>
 
             <div id="reportResults"></div>
         `;
-
-        document.getElementById('reportRange')?.addEventListener('change', (e) => {
-            const val = e.target.value;
-            const today = new Date();
-            let start = today.toISOString().split('T')[0];
-            let end = today.toISOString().split('T')[0];
-
-            if (val === 'yesterday') {
-                const d = new Date(today);
-                d.setDate(d.getDate() - 1);
-                start = d.toISOString().split('T')[0];
-                end = start;
-            } else if (val === 'week') {
-                const d = new Date(today);
-                d.setDate(d.getDate() - 7);
-                start = d.toISOString().split('T')[0];
-            } else if (val === 'month') {
-                const d = new Date(today);
-                d.setDate(1);
-                start = d.toISOString().split('T')[0];
-            }
-
-            document.getElementById('reportStart').value = start;
-            document.getElementById('reportEnd').value = end;
-            if (val !== 'custom') {
-                this._generateReport();
-            }
-        });
 
         setTimeout(() => this._generateReport(), 100);
     },
@@ -1974,17 +1686,15 @@ const App = {
         results.innerHTML = `
             <div class="dashboard-grid" style="margin-top:20px;">
                 <div class="stat-card">
-                    <div class="stat-label">Total Purchases</div>
+                    <div class="stat-label">Purchases</div>
                     <div class="stat-value">${Utils.formatCurrency(totalPurchases)}</div>
-                    <div style="font-size:0.75rem;color:var(--text-muted);">${inData.length} entries</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Total Sales</div>
+                    <div class="stat-label">Sales</div>
                     <div class="stat-value">${Utils.formatCurrency(totalSales)}</div>
-                    <div style="font-size:0.75rem;color:var(--text-muted);">${outData.length} entries</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Total Profit</div>
+                    <div class="stat-label">Profit</div>
                     <div class="stat-value ${totalProfit > 0 ? 'text-success' : 'text-danger'}">${Utils.formatCurrency(totalProfit)}</div>
                 </div>
                 <div class="stat-card">
@@ -2066,8 +1776,6 @@ const App = {
                 Party: item.vendorName,
                 Item: item.itemName,
                 Quantity: item.quantity,
-                Unit: item.unit || 'pcs',
-                Price: item.purchasePrice,
                 Total: item.quantity * item.purchasePrice
             })),
             ...outData.map(item => ({
@@ -2076,8 +1784,6 @@ const App = {
                 Party: item.customerName,
                 Item: item.itemName,
                 Quantity: item.quantity,
-                Unit: 'pcs',
-                Price: item.salePrice,
                 Total: item.quantity * item.salePrice
             }))
         ];
@@ -2087,49 +1793,10 @@ const App = {
             return;
         }
 
-        const headers = ['Type', 'Date', 'Party', 'Item', 'Quantity', 'Unit', 'Price', 'Total'];
+        const headers = ['Type', 'Date', 'Party', 'Item', 'Quantity', 'Total'];
         const csv = Utils.arrayToCSV(allData, headers);
         Utils.downloadFile(csv, `daily_report_${start}_to_${end}.csv`, 'text/csv');
         Utils.toast('Report exported!', 'success');
-    },
-
-    _printDailyReport() {
-        const results = document.getElementById('reportResults');
-        if (!results || !results.innerHTML.trim()) {
-            Utils.toast('No data to print', 'warning');
-            return;
-        }
-
-        const settings = Utils.getSettings();
-        const printWindow = window.open('', '_blank', 'width=900,height=600');
-        printWindow.document.write(`
-            <html><head><title>Daily Report</title>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 30px; }
-                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
-                .header h1 { margin: 0; color: #4F46E5; }
-                table { width: 100%; border-collapse: collapse; font-size: 11px; }
-                th { background: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #ddd; }
-                td { padding: 6px 8px; border: 1px solid #ddd; }
-                .footer { text-align: center; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px; color: #666; }
-            </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1>${settings.companyName}</h1>
-                    <p>${settings.address} | ${settings.phone}</p>
-                    <p><strong>Daily Report</strong></p>
-                    <p>Generated: ${new Date().toLocaleString()}</p>
-                </div>
-                ${results.innerHTML}
-                <div class="footer">
-                    <p>${settings.footerNote || 'Thank you for your business!'}</p>
-                </div>
-                <script>window.onload = function() { window.print(); }</script>
-            </body>
-            </html>
-        `);
-        printWindow.document.close();
     },
 
     // ============================================================
@@ -2156,7 +1823,6 @@ const App = {
                         <option value="debit">Debit</option>
                     </select>
                     <button class="btn btn-outline" onclick="App._filterLedger()"><i class="fas fa-filter"></i></button>
-                    <button class="btn btn-success btn-sm" onclick="App._exportLedger()"><i class="fas fa-file-excel"></i> Export</button>
                 </div>
             </div>
 
@@ -2164,7 +1830,7 @@ const App = {
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Date</th><th>Party</th><th>Type</th><th>Description</th><th>Credit</th><th>Debit</th><th>Balance</th><th>Actions</th></tr>
+                            <tr><th>Date</th><th>Party</th><th>Type</th><th>Description</th><th>Amount</th><th>Balance</th><th>Actions</th></tr>
                         </thead>
                         <tbody id="ledgerTable">
                             ${ledger.map(item => `
@@ -2173,15 +1839,14 @@ const App = {
                                     <td>${item.partyName}</td>
                                     <td><span class="badge ${item.type === 'credit' ? 'badge-success' : 'badge-danger'}">${item.type}</span></td>
                                     <td>${item.description || 'N/A'}</td>
-                                    <td class="text-success">${item.type === 'credit' ? Utils.formatCurrency(item.amount) : '-'}</td>
-                                    <td class="text-danger">${item.type === 'debit' ? Utils.formatCurrency(item.amount) : '-'}</td>
+                                    <td>${Utils.formatCurrency(item.amount)}</td>
                                     <td>${Utils.formatCurrency(item.balance || 0)}</td>
                                     <td>
                                         <button class="btn btn-danger btn-xs" onclick="App._deleteLedger('${item.id}')"><i class="fas fa-trash"></i></button>
                                     </td>
                                 </tr>
                             `).join('')}
-                            ${ledger.length === 0 ? '<tr><td colspan="8" class="table-empty"><i class="fas fa-inbox"></i>No ledger entries</td></tr>' : ''}
+                            ${ledger.length === 0 ? '<tr><td colspan="7" class="table-empty"><i class="fas fa-inbox"></i>No entries</td></tr>' : ''}
                         </tbody>
                     </table>
                 </div>
@@ -2201,7 +1866,6 @@ const App = {
             const term = search.toLowerCase();
             data = data.filter(item => item.partyName?.toLowerCase().includes(term));
         }
-
         if (type !== 'all') {
             data = data.filter(item => item.type === type);
         }
@@ -2221,31 +1885,24 @@ const App = {
                     <td>${item.partyName}</td>
                     <td><span class="badge ${item.type === 'credit' ? 'badge-success' : 'badge-danger'}">${item.type}</span></td>
                     <td>${item.description || 'N/A'}</td>
-                    <td class="text-success">${item.type === 'credit' ? Utils.formatCurrency(item.amount) : '-'}</td>
-                    <td class="text-danger">${item.type === 'debit' ? Utils.formatCurrency(item.amount) : '-'}</td>
+                    <td>${Utils.formatCurrency(item.amount)}</td>
                     <td>${Utils.formatCurrency(item.balance)}</td>
                     <td>
                         <button class="btn btn-danger btn-xs" onclick="App._deleteLedger('${item.id}')"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
-            `).join('') || '<tr><td colspan="8" class="table-empty"><i class="fas fa-inbox"></i>No matching entries</td></tr>';
+            `).join('') || '<tr><td colspan="7" class="table-empty"><i class="fas fa-inbox"></i>No matching entries</td></tr>';
         }
     },
 
     _showLedgerEntry(data = null) {
         const isEdit = !!data;
-        const parties = Utils.unique([
-            ...DB.readAll(DB.TABLES.VENDORS).map(v => v.name),
-            ...DB.readAll(DB.TABLES.CUSTOMERS).map(c => c.name)
-        ]);
-
         const content = `
             <form id="ledgerForm">
                 <div class="form-row">
                     <div class="form-group">
                         <label>Party <span class="required">*</span></label>
-                        <input type="text" id="ledgerPartyInput" class="form-control" list="partyList" placeholder="Party name" value="${data?.partyName || ''}" required>
-                        <datalist id="partyList">${parties.map(p => `<option value="${p}">`).join('')}</datalist>
+                        <input type="text" id="ledgerParty" class="form-control" placeholder="Party name" value="${data?.partyName || ''}" required>
                     </div>
                     <div class="form-group">
                         <label>Type <span class="required">*</span></label>
@@ -2276,13 +1933,13 @@ const App = {
             </form>
         `;
 
-        const modal = Utils.showModal(content, isEdit ? 'Edit Ledger Entry' : 'New Ledger Entry');
+        const modal = Utils.showModal(content, isEdit ? 'Edit Entry' : 'New Entry');
 
         document.getElementById('ledgerForm').addEventListener('submit', (e) => {
             e.preventDefault();
 
             const formData = {
-                partyName: document.getElementById('ledgerPartyInput').value.trim(),
+                partyName: document.getElementById('ledgerParty').value.trim(),
                 type: document.getElementById('ledgerTypeInput').value,
                 amount: parseFloat(document.getElementById('ledgerAmount').value) || 0,
                 date: document.getElementById('ledgerDate').value,
@@ -2296,10 +1953,10 @@ const App = {
 
             if (isEdit) {
                 DB.update(DB.TABLES.LEDGER, data.id, formData);
-                Utils.toast('Ledger entry updated!', 'success');
+                Utils.toast('Entry updated!', 'success');
             } else {
                 DB.create(DB.TABLES.LEDGER, formData);
-                Utils.toast('Ledger entry saved!', 'success');
+                Utils.toast('Entry saved!', 'success');
             }
 
             modal?.remove();
@@ -2308,31 +1965,12 @@ const App = {
     },
 
     async _deleteLedger(id) {
-        const confirmed = await Utils.confirm('Are you sure you want to delete this entry?', 'Delete Entry');
+        const confirmed = await Utils.confirm('Delete this entry?', 'Delete');
         if (confirmed) {
             DB.delete(DB.TABLES.LEDGER, id);
             Utils.toast('Entry deleted!', 'success');
             this._renderLedger();
         }
-    },
-
-    _exportLedger() {
-        const data = DB.readAll(DB.TABLES.LEDGER);
-        if (data.length === 0) {
-            Utils.toast('No data to export', 'warning');
-            return;
-        }
-        const headers = ['Date', 'Party', 'Type', 'Description', 'Amount', 'Balance'];
-        const csv = Utils.arrayToCSV(data.map(item => ({
-            Date: Utils.formatDate(item.createdAt, 'date'),
-            Party: item.partyName,
-            Type: item.type,
-            Description: item.description || '',
-            Amount: item.amount,
-            Balance: item.balance || 0
-        })), headers);
-        Utils.downloadFile(csv, `ledger_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
-        Utils.toast('Ledger exported!', 'success');
     },
 
     // ============================================================
@@ -2345,52 +1983,59 @@ const App = {
             <h2 style="font-size:1.2rem;margin-bottom:16px;">Reports</h2>
 
             <div class="dashboard-grid">
-                <div class="stat-card" onclick="App._generateReportType('purchase')" style="cursor:pointer;">
+                <div class="stat-card" onclick="App._showReport('purchase')" style="cursor:pointer;">
                     <div class="stat-top"><div class="stat-icon"><i class="fas fa-truck"></i></div></div>
                     <div class="stat-label">Purchase Report</div>
                 </div>
-                <div class="stat-card" onclick="App._generateReportType('sales')" style="cursor:pointer;">
+                <div class="stat-card" onclick="App._showReport('sales')" style="cursor:pointer;">
                     <div class="stat-top"><div class="stat-icon green"><i class="fas fa-shopping-cart"></i></div></div>
                     <div class="stat-label">Sales Report</div>
                 </div>
-                <div class="stat-card" onclick="App._generateReportType('profit')" style="cursor:pointer;">
-                    <div class="stat-top"><div class="stat-icon blue"><i class="fas fa-chart-line"></i></div></div>
-                    <div class="stat-label">Profit Report</div>
-                </div>
-                <div class="stat-card" onclick="App._generateReportType('stock')" style="cursor:pointer;">
-                    <div class="stat-top"><div class="stat-icon orange"><i class="fas fa-boxes"></i></div></div>
+                <div class="stat-card" onclick="App._showReport('stock')" style="cursor:pointer;">
+                    <div class="stat-top"><div class="stat-icon blue"><i class="fas fa-boxes"></i></div></div>
                     <div class="stat-label">Stock Report</div>
                 </div>
-                <div class="stat-card" onclick="App._generateReportType('customer')" style="cursor:pointer;">
-                    <div class="stat-top"><div class="stat-icon"><i class="fas fa-users"></i></div></div>
-                    <div class="stat-label">Customer Report</div>
-                </div>
-                <div class="stat-card" onclick="App._generateReportType('vendor')" style="cursor:pointer;">
-                    <div class="stat-top"><div class="stat-icon green"><i class="fas fa-handshake"></i></div></div>
-                    <div class="stat-label">Vendor Report</div>
+                <div class="stat-card" onclick="App._showReport('profit')" style="cursor:pointer;">
+                    <div class="stat-top"><div class="stat-icon orange"><i class="fas fa-chart-line"></i></div></div>
+                    <div class="stat-label">Profit Report</div>
                 </div>
             </div>
 
             <div id="reportOutput" class="card">
-                <div class="table-empty"><i class="fas fa-file-alt"></i><p>Select a report type above</p></div>
+                <div class="table-empty"><i class="fas fa-file-alt"></i><p>Select a report type</p></div>
             </div>
         `;
     },
 
-    _generateReportType(type) {
+    _showReport(type) {
         const output = document.getElementById('reportOutput');
         if (!output) return;
 
         let data = [];
         let title = '';
+        let headers = [];
 
         switch(type) {
-            case 'purchase': data = DB.readAll(DB.TABLES.STOCK_IN); title = 'Purchase Report'; break;
-            case 'sales': data = DB.readAll(DB.TABLES.STOCK_OUT); title = 'Sales Report'; break;
-            case 'profit': data = DB.readAll(DB.TABLES.STOCK_OUT); title = 'Profit Report'; break;
-            case 'stock': data = DB.getStockBalance(); title = 'Stock Report'; break;
-            case 'customer': data = DB.readAll(DB.TABLES.CUSTOMERS); title = 'Customer Report'; break;
-            case 'vendor': data = DB.readAll(DB.TABLES.VENDORS); title = 'Vendor Report'; break;
+            case 'purchase':
+                data = DB.readAll(DB.TABLES.STOCK_IN);
+                title = 'Purchase Report';
+                headers = ['Date', 'Vendor', 'Item', 'Barcode', 'Quantity', 'Unit', 'Price', 'Total'];
+                break;
+            case 'sales':
+                data = DB.readAll(DB.TABLES.STOCK_OUT);
+                title = 'Sales Report';
+                headers = ['Invoice', 'Date', 'Customer', 'Item', 'Quantity', 'Price', 'Total', 'Profit'];
+                break;
+            case 'stock':
+                data = DB.getStockBalance();
+                title = 'Stock Report';
+                headers = ['Barcode', 'Item', 'Available', 'Unit', 'Stock Value', 'Profit'];
+                break;
+            case 'profit':
+                data = DB.readAll(DB.TABLES.STOCK_OUT);
+                title = 'Profit Report';
+                headers = ['Invoice', 'Date', 'Customer', 'Item', 'Quantity', 'Price', 'Cost', 'Profit'];
+                break;
         }
 
         if (data.length === 0) {
@@ -2398,31 +2043,26 @@ const App = {
             return;
         }
 
-        const headers = Object.keys(data[0]).filter(h => !['id', 'password', 'createdAt', 'updatedAt'].includes(h));
-
         output.innerHTML = `
             <div class="flex-between mb-16">
                 <h3>${title}</h3>
-                <div class="flex gap-8">
-                    <button class="btn btn-success btn-sm" onclick="App._exportReport('${type}')"><i class="fas fa-file-excel"></i> Export</button>
-                    <button class="btn btn-primary btn-sm" onclick="App._printReport('${type}')"><i class="fas fa-print"></i> Print</button>
-                </div>
+                <button class="btn btn-success btn-sm" onclick="App._exportReport('${type}')"><i class="fas fa-file-excel"></i> Export</button>
             </div>
             <div class="table-responsive">
                 <table>
-                    <thead><tr>${headers.map(h => `<th>${h.replace(/([A-Z])/g, ' $1').trim()}</th>`).join('')}</tr></thead>
+                    <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
                     <tbody>
-                        ${data.slice(0, 100).map(item => `
-                            <tr>${headers.map(h => {
-                                let val = item[h];
-                                if (typeof val === 'number' && h.toLowerCase().includes('price')) val = Utils.formatCurrency(val);
-                                else if (h.includes('Date') || h.includes('date')) val = Utils.formatDate(val, 'date');
-                                return `<td>${val || '-'}</td>`;
-                            }).join('')}</tr>
-                        `).join('')}
+                        ${data.slice(0, 50).map(item => {
+                            const row = headers.map(h => {
+                                let val = item[h.toLowerCase()] || item[h] || '-';
+                                if (typeof val === 'number') val = Utils.formatCurrency(val);
+                                return `<td>${val}</td>`;
+                            }).join('');
+                            return `<tr>${row}</tr>`;
+                        }).join('')}
                     </tbody>
                 </table>
-                ${data.length > 100 ? `<p class="text-muted mt-8">Showing 100 of ${data.length}</p>` : ''}
+                ${data.length > 50 ? `<p class="text-muted mt-8">Showing 50 of ${data.length}</p>` : ''}
             </div>
         `;
     },
@@ -2432,52 +2072,19 @@ const App = {
         switch(type) {
             case 'purchase': data = DB.readAll(DB.TABLES.STOCK_IN); break;
             case 'sales': data = DB.readAll(DB.TABLES.STOCK_OUT); break;
-            case 'profit': data = DB.readAll(DB.TABLES.STOCK_OUT); break;
             case 'stock': data = DB.getStockBalance(); break;
-            case 'customer': data = DB.readAll(DB.TABLES.CUSTOMERS); break;
-            case 'vendor': data = DB.readAll(DB.TABLES.VENDORS); break;
+            case 'profit': data = DB.readAll(DB.TABLES.STOCK_OUT); break;
         }
 
-        if (data.length === 0) { Utils.toast('No data', 'warning'); return; }
+        if (data.length === 0) {
+            Utils.toast('No data to export', 'warning');
+            return;
+        }
 
-        const headers = Object.keys(data[0]).filter(h => !['id', 'password', 'createdAt', 'updatedAt'].includes(h));
+        const headers = Object.keys(data[0]).filter(h => !['id', 'createdAt', 'updatedAt'].includes(h));
         const csv = Utils.arrayToCSV(data, headers);
         Utils.downloadFile(csv, `${type}_report_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
         Utils.toast('Report exported!', 'success');
-    },
-
-    _printReport(type) {
-        const output = document.getElementById('reportOutput');
-        if (!output) return;
-
-        const settings = Utils.getSettings();
-        const printWindow = window.open('', '_blank', 'width=900,height=600');
-        printWindow.document.write(`
-            <html><head><title>${type} Report</title>
-            <style>
-                body { font-family: Arial; padding:30px; }
-                .header { text-align:center; border-bottom:2px solid #333; padding-bottom:20px; margin-bottom:20px; }
-                .header h1 { margin:0; color:#4F46E5; }
-                table { width:100%; border-collapse:collapse; font-size:10px; }
-                th { background:#f0f0f0; padding:6px; border:1px solid #ddd; }
-                td { padding:4px 6px; border:1px solid #ddd; }
-                .footer { text-align:center; margin-top:20px; border-top:1px solid #ddd; padding-top:20px; color:#666; }
-            </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1>${settings.companyName}</h1>
-                    <p>${settings.address} | ${settings.phone}</p>
-                    <p><strong>${type.toUpperCase()} Report</strong></p>
-                    <p>Generated: ${new Date().toLocaleString()}</p>
-                </div>
-                ${output.innerHTML.replace(/<button[^>]*>.*?<\/button>/g, '')}
-                <div class="footer"><p>${settings.footerNote || 'Thank you!'}</p></div>
-                <script>window.onload = function() { window.print(); }</script>
-            </body>
-            </html>
-        `);
-        printWindow.document.close();
     },
 
     // ============================================================
@@ -2491,16 +2098,8 @@ const App = {
 
             <div class="card">
                 <div class="flex gap-8">
-                    <input type="text" id="searchQuery" class="form-control" style="flex:1;" placeholder="Search items, vendors, customers, invoices..." autofocus />
+                    <input type="text" id="searchQuery" class="form-control" style="flex:1;" placeholder="Search items, vendors, customers..." autofocus>
                     <button class="btn btn-primary" onclick="App._performSearch()"><i class="fas fa-search"></i> Search</button>
-                    <button class="btn btn-outline" onclick="document.getElementById('searchQuery').value='';document.getElementById('searchResults').innerHTML='';"><i class="fas fa-undo"></i> Clear</button>
-                </div>
-                <div class="flex flex-wrap gap-8 mt-8">
-                    <span class="badge badge-primary" style="cursor:pointer;padding:4px 14px;" onclick="document.getElementById('searchQuery').value=this.textContent;App._performSearch();">Item</span>
-                    <span class="badge badge-info" style="cursor:pointer;padding:4px 14px;" onclick="document.getElementById('searchQuery').value=this.textContent;App._performSearch();">Barcode</span>
-                    <span class="badge badge-warning" style="cursor:pointer;padding:4px 14px;" onclick="document.getElementById('searchQuery').value=this.textContent;App._performSearch();">Vendor</span>
-                    <span class="badge badge-success" style="cursor:pointer;padding:4px 14px;" onclick="document.getElementById('searchQuery').value=this.textContent;App._performSearch();">Customer</span>
-                    <span class="badge badge-danger" style="cursor:pointer;padding:4px 14px;" onclick="document.getElementById('searchQuery').value=this.textContent;App._performSearch();">Invoice</span>
                 </div>
             </div>
 
@@ -2515,13 +2114,11 @@ const App = {
     _performSearch() {
         const query = document.getElementById('searchQuery')?.value.trim();
         const results = document.getElementById('searchResults');
+
         if (!query || !results) return;
 
         const stockIn = DB.readAll(DB.TABLES.STOCK_IN);
         const stockOut = DB.readAll(DB.TABLES.STOCK_OUT);
-        const vendors = DB.readAll(DB.TABLES.VENDORS);
-        const customers = DB.readAll(DB.TABLES.CUSTOMERS);
-
         const term = query.toLowerCase();
 
         const inResults = stockIn.filter(item =>
@@ -2537,27 +2134,22 @@ const App = {
             item.invoiceNumber?.toLowerCase().includes(term)
         );
 
-        const vendorResults = vendors.filter(item =>
-            item.name?.toLowerCase().includes(term) ||
-            item.phone?.toLowerCase().includes(term)
-        );
+        const total = inResults.length + outResults.length;
 
-        const customerResults = customers.filter(item =>
-            item.name?.toLowerCase().includes(term) ||
-            item.phone?.toLowerCase().includes(term)
-        );
-
-        const totalResults = inResults.length + outResults.length + vendorResults.length + customerResults.length;
-
-        if (totalResults === 0) {
+        if (total === 0) {
             results.innerHTML = `
-                <div class="card"><div class="table-empty"><i class="fas fa-search"></i><p>No results for "<strong>${query}</strong>"</p></div></div>
+                <div class="card">
+                    <div class="table-empty">
+                        <i class="fas fa-search"></i>
+                        <p>No results for "<strong>${query}</strong>"</p>
+                    </div>
+                </div>
             `;
             return;
         }
 
         results.innerHTML = `
-            <h3 style="margin:16px 0;">Found ${totalResults} results for "<strong>${query}</strong>"</h3>
+            <h3 style="margin:16px 0;">Found ${total} results for "<strong>${query}</strong>"</h3>
 
             ${inResults.length > 0 ? `
                 <div class="card">
@@ -2595,46 +2187,6 @@ const App = {
                                         <td>${item.itemName}</td>
                                         <td><span class="badge badge-info">${item.invoiceNumber}</span></td>
                                         <td>${item.quantity}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            ` : ''}
-
-            ${vendorResults.length > 0 ? `
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-handshake text-warning"></i> Vendors (${vendorResults.length})</div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead><tr><th>Name</th><th>Phone</th><th>Address</th></tr></thead>
-                            <tbody>
-                                ${vendorResults.map(item => `
-                                    <tr>
-                                        <td>${item.name}</td>
-                                        <td>${item.phone || 'N/A'}</td>
-                                        <td>${item.address || 'N/A'}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            ` : ''}
-
-            ${customerResults.length > 0 ? `
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-users text-primary"></i> Customers (${customerResults.length})</div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead><tr><th>Name</th><th>Phone</th><th>Address</th></tr></thead>
-                            <tbody>
-                                ${customerResults.map(item => `
-                                    <tr>
-                                        <td>${item.name}</td>
-                                        <td>${item.phone || 'N/A'}</td>
-                                        <td>${item.address || 'N/A'}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -2990,16 +2542,20 @@ const App = {
 // ============================================================
 // INITIALIZE
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 KRT TRADERS ERP v2.0');
+    console.log('📡 Supabase URL:', SUPABASE_CONFIG.URL);
+    console.log('🔑 Supabase Key:', SUPABASE_CONFIG.API_KEY.substring(0, 20) + '...');
+    
+    // Initialize Auth
     Auth.init();
+    
+    // Expose globals
     window.App = App;
     window.Utils = Utils;
     window.DB = DB;
     window.Auth = Auth;
     window.SyncManager = SyncManager;
-
-    console.log('🚀 KRT TRADERS ERP v2.0');
-    console.log('📡 Supabase URL:', SUPABASE_CONFIG.URL);
-    console.log('🔑 Supabase Key:', SUPABASE_CONFIG.API_KEY.substring(0, 20) + '...');
+    
     console.log('✅ System ready!');
 });
