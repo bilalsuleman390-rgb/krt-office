@@ -3,79 +3,51 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KRT TRADERS – Enterprise ERP System v2.0</title>
-    <meta name="description" content="KRT TRADERS Enterprise Resource Planning System" />
-    <meta name="keywords" content="ERP, Inventory, Sales, Purchases, Ledger, Reports" />
-    <meta name="author" content="KRT TRADERS" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏢</text></svg>" />
-    
-    <!-- Font Awesome -->
+    <title>KRT TRADERS – Enterprise ERP System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    
-    <!-- Google Font Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    
-    <!-- Main Styles -->
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-    <!-- ============================================================
-    LOGIN PAGE
-    ============================================================ -->
+    <!-- ===== LOGIN PAGE ===== -->
     <div id="loginPage" class="login-page">
-        <div class="login-bg-animation">
-            <div class="circle circle-1"></div>
-            <div class="circle circle-2"></div>
-            <div class="circle circle-3"></div>
-        </div>
         <div class="login-box">
             <div class="login-logo">
-                <div class="logo-icon">
-                    <i class="fas fa-cubes"></i>
-                </div>
+                <div class="logo-icon"><i class="fas fa-cubes"></i></div>
                 <h1>KRT TRADERS</h1>
                 <p>Enterprise Resource Planning System</p>
                 <div class="login-version">Version 2.0</div>
             </div>
-            
-            <form id="loginForm" autocomplete="off">
+            <form id="loginForm">
                 <div class="form-group">
-                    <label><i class="fas fa-user"></i> Username</label>
-                    <input type="text" id="loginUsername" class="form-control" placeholder="Enter your username" value="admin" required />
-                    <span class="form-hint">Default: admin</span>
+                    <label><i class="fas fa-user"></i> USERNAME</label>
+                    <input type="text" id="loginUsername" class="form-control" placeholder="Enter username" value="admin" required />
                 </div>
                 <div class="form-group">
-                    <label><i class="fas fa-lock"></i> Password</label>
-                    <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password" value="admin123" required />
-                    <span class="form-hint">Default: admin123</span>
+                    <label><i class="fas fa-lock"></i> PASSWORD</label>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="Enter password" value="admin123" required />
                 </div>
                 <div class="form-group" style="display:flex;align-items:center;gap:10px;">
                     <input type="checkbox" id="rememberMe" checked />
-                    <label for="rememberMe" style="margin:0;font-size:0.85rem;text-transform:none;letter-spacing:0;">Remember Me</label>
+                    <label for="rememberMe" style="margin:0;font-size:0.85rem;text-transform:none;letter-spacing:0;color:var(--text-secondary);">Remember Me</label>
                 </div>
                 <button type="submit" class="login-btn">
                     <i class="fas fa-sign-in-alt"></i> Sign In
                 </button>
             </form>
-            
-            <div class="login-divider">
-                <span>Secure Login</span>
-            </div>
-            
+            <div class="login-divider"><span>Secure Login</span></div>
             <div class="login-footer">
-                <p>Default Credentials: <span>admin</span> / <span>admin123</span></p>
+                <p>Default: <span>admin</span> / <span>admin123</span></p>
                 <p class="login-copyright">&copy; 2024 KRT TRADERS. All rights reserved.</p>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-    MAIN APP
-    ============================================================ -->
+    <!-- ===== MAIN APP ===== -->
     <div id="app" style="display:none;">
         
-        <!-- ===== SIDEBAR ===== -->
+        <!-- Sidebar -->
         <aside id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-brand">
@@ -85,9 +57,7 @@
                         <span class="brand-sub">Enterprise ERP</span>
                     </div>
                 </div>
-                <button id="toggleSidebar" class="sidebar-toggle" aria-label="Toggle Sidebar">
-                    <i class="fas fa-bars"></i>
-                </button>
+                <button id="toggleSidebar" class="sidebar-toggle"><i class="fas fa-bars"></i></button>
             </div>
 
             <div class="sidebar-user">
@@ -101,108 +71,59 @@
             <nav class="sidebar-nav">
                 <div class="nav-label">Main Navigation</div>
                 <ul>
-                    <li class="active" data-page="dashboard">
-                        <i class="fas fa-th-large"></i>
-                        <span>Dashboard</span>
-                        <span class="nav-badge">Live</span>
-                    </li>
-                    <li data-page="stock-in">
-                        <i class="fas fa-arrow-down"></i>
-                        <span>Stock IN</span>
-                        <span class="nav-badge" id="stockInCount">0</span>
-                    </li>
-                    <li data-page="stock-out">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>Stock OUT</span>
-                        <span class="nav-badge" id="stockOutCount">0</span>
-                    </li>
-                    <li data-page="stock-balance">
-                        <i class="fas fa-balance-scale"></i>
-                        <span>Stock Balance</span>
-                    </li>
+                    <li class="active" data-page="dashboard"><i class="fas fa-th-large"></i><span>Dashboard</span><span class="nav-badge">Live</span></li>
+                    <li data-page="stock-in"><i class="fas fa-arrow-down"></i><span>Stock IN</span><span class="nav-badge" id="stockInCount">0</span></li>
+                    <li data-page="stock-out"><i class="fas fa-arrow-up"></i><span>Stock OUT</span><span class="nav-badge" id="stockOutCount">0</span></li>
+                    <li data-page="stock-balance"><i class="fas fa-balance-scale"></i><span>Stock Balance</span></li>
                 </ul>
 
                 <div class="nav-label">Financial Reports</div>
                 <ul>
-                    <li data-page="daily-report">
-                        <i class="fas fa-calendar-day"></i>
-                        <span>Daily Report</span>
-                    </li>
-                    <li data-page="ledger">
-                        <i class="fas fa-book"></i>
-                        <span>Ledger</span>
-                        <span class="nav-badge" id="ledgerCount">0</span>
-                    </li>
-                    <li data-page="reports">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Reports</span>
-                    </li>
+                    <li data-page="daily-report"><i class="fas fa-calendar-day"></i><span>Daily Report</span></li>
+                    <li data-page="ledger"><i class="fas fa-book"></i><span>Ledger</span><span class="nav-badge" id="ledgerCount">0</span></li>
+                    <li data-page="reports"><i class="fas fa-chart-bar"></i><span>Reports</span></li>
                 </ul>
 
                 <div class="nav-label">System Administration</div>
                 <ul>
-                    <li data-page="search">
-                        <i class="fas fa-search"></i>
-                        <span>Global Search</span>
-                    </li>
-                    <li data-page="settings">
-                        <i class="fas fa-cog"></i>
-                        <span>Settings</span>
-                    </li>
-                    <li data-page="backup">
-                        <i class="fas fa-database"></i>
-                        <span>Backup & Restore</span>
-                    </li>
+                    <li data-page="search"><i class="fas fa-search"></i><span>Global Search</span></li>
+                    <li data-page="settings"><i class="fas fa-cog"></i><span>Settings</span></li>
+                    <li data-page="backup"><i class="fas fa-database"></i><span>Backup & Restore</span></li>
                 </ul>
             </nav>
 
             <div class="sidebar-footer">
                 <div class="sync-status-box">
                     <div class="sync-status-left">
-                        <span class="sync-dot offline" id="syncDot"></span>
-                        <span class="sync-label" id="syncLabel">Offline</span>
+                        <span class="sync-dot online" id="syncDot"></span>
+                        <span class="sync-label" id="syncLabel">Online</span>
                     </div>
                     <div class="sync-status-right">
-                        <span class="sync-time" id="lastSyncTime">Never</span>
-                        <button class="sync-btn" id="syncNowBtn" title="Sync Now"><i class="fas fa-sync"></i></button>
+                        <span class="sync-time" id="lastSyncTime">Just now</span>
+                        <button class="sync-btn" id="syncNowBtn"><i class="fas fa-sync"></i></button>
                     </div>
                 </div>
-                <button id="logoutBtn" class="logout-btn-sidebar">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
+                <button id="logoutBtn" class="logout-btn-sidebar"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </aside>
 
-        <!-- ===== MAIN CONTENT ===== -->
+        <!-- Main Content -->
         <main id="main-content">
-
-            <!-- Top Header -->
             <header class="top-header">
                 <div class="header-left">
                     <h2 id="pageTitle">Dashboard</h2>
                     <span class="page-indicator" id="currentDateTime"></span>
-                    <span class="page-indicator" id="recordCount"></span>
                 </div>
                 <div class="header-right">
                     <div class="search-bar-top">
                         <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="globalSearchInput" placeholder="Search items, vendors, customers..." />
+                        <input type="text" id="globalSearchInput" placeholder="Search items, vendors..." />
                         <button id="globalSearchBtn"><i class="fas fa-arrow-right"></i></button>
-                    </div>
-                    <div class="header-actions">
-                        <button class="header-action-btn" id="notificationsBtn" title="Notifications">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-dot"></span>
-                        </button>
-                        <button class="header-action-btn" id="fullscreenBtn" title="Fullscreen">
-                            <i class="fas fa-expand"></i>
-                        </button>
                     </div>
                     <div class="user-profile" id="userProfile">
                         <span class="user-name" id="userNameDisplay">Admin</span>
                         <div class="user-avatar" id="userAvatar">A</div>
                         <div class="user-dropdown" id="userDropdown">
-                            <a href="#"><i class="fas fa-user"></i> Profile</a>
                             <a href="#" onclick="App.loadPage('settings')"><i class="fas fa-cog"></i> Settings</a>
                             <hr />
                             <a href="#" id="logoutDropdown"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -210,34 +131,17 @@
                     </div>
                 </div>
             </header>
-
-            <!-- Page Content -->
-            <section id="pageContent">
-                <!-- Dynamic content loads here -->
-            </section>
-
-            <!-- Footer -->
+            <section id="pageContent"></section>
             <footer class="app-footer">
-                <div class="footer-left">
-                    <span>&copy; 2024 KRT TRADERS. All rights reserved.</span>
-                </div>
-                <div class="footer-right">
-                    <span>System Status: <span class="status-indicator" id="systemStatus">Operational</span></span>
-                    <span>|</span>
-                    <span>v2.0</span>
-                </div>
+                <span>&copy; 2024 KRT TRADERS. All rights reserved.</span>
+                <span id="syncFooterStatus">🔗 Cloud Sync Active</span>
             </footer>
-
         </main>
     </div>
 
-    <!-- ===== TOAST CONTAINER ===== -->
+    <!-- ===== TOAST & MODAL ===== -->
     <div id="toastContainer"></div>
-
-    <!-- ===== MODAL CONTAINER ===== -->
     <div id="modalContainer"></div>
-
-    <!-- ===== CONFIRM DIALOG ===== -->
     <div id="confirmDialog" style="display:none;">
         <div class="confirm-overlay">
             <div class="confirm-box">
@@ -252,10 +156,6 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    SCRIPTS
-    ============================================================ -->
     <script src="script.js"></script>
-
 </body>
 </html>
