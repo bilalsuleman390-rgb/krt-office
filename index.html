@@ -3,31 +3,74 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KRT TRADERS – ERP System</title>
-    <link rel="stylesheet" href="css/style.css" />
-    <!-- Font Awesome for Icons -->
+    <title>KRT TRADERS – Enterprise ERP System</title>
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <!-- Google Font: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    
+    <!-- Main Styles -->
+    <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-    <!-- ===== APP CONTAINER ===== -->
-    <div id="app">
+    <!-- ============================================================
+    LOGIN PAGE
+    ============================================================ -->
+    <div id="loginPage" class="login-page">
+        <div class="login-box">
+            <div class="login-logo">
+                <div class="logo-icon">
+                    <i class="fas fa-cubes"></i>
+                </div>
+                <h1>KRT TRADERS</h1>
+                <p>Enterprise ERP System</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Username</label>
+                    <input type="text" id="loginUsername" class="form-control" placeholder="Enter username" value="admin" required />
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="Enter password" value="admin123" required />
+                </div>
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                Default: <span>admin</span> / <span>admin123</span>
+            </div>
+        </div>
+    </div>
 
+    <!-- ============================================================
+    MAIN APP
+    ============================================================ -->
+    <div id="app" style="display:none;">
+        
         <!-- ===== SIDEBAR ===== -->
         <aside id="sidebar">
             <div class="sidebar-header">
-                <div class="logo">
-                    <i class="fas fa-cubes"></i>
-                    <span>KRT</span>
+                <div class="sidebar-brand">
+                    <div class="brand-icon">K</div>
+                    <div>
+                        <span class="brand-text">KRT</span>
+                        <span class="brand-sub">Enterprise</span>
+                    </div>
                 </div>
-                <button id="toggleSidebar" class="toggle-btn">
+                <button id="toggleSidebar" class="sidebar-toggle">
                     <i class="fas fa-bars"></i>
                 </button>
             </div>
 
             <nav class="sidebar-nav">
+                <div class="nav-label">Main Menu</div>
                 <ul>
                     <li class="active" data-page="dashboard">
                         <i class="fas fa-th-large"></i>
@@ -45,6 +88,10 @@
                         <i class="fas fa-balance-scale"></i>
                         <span>Stock Balance</span>
                     </li>
+                </ul>
+
+                <div class="nav-label" style="margin-top:12px;">Reports</div>
+                <ul>
                     <li data-page="daily-report">
                         <i class="fas fa-calendar-day"></i>
                         <span>Daily Report</span>
@@ -57,6 +104,10 @@
                         <i class="fas fa-chart-bar"></i>
                         <span>Reports</span>
                     </li>
+                </ul>
+
+                <div class="nav-label" style="margin-top:12px;">System</div>
+                <ul>
                     <li data-page="search">
                         <i class="fas fa-search"></i>
                         <span>Search</span>
@@ -73,15 +124,15 @@
             </nav>
 
             <div class="sidebar-footer">
-                <div class="sync-status">
-                    <span id="syncIndicator" class="sync-offline">
-                        <i class="fas fa-cloud"></i> Offline
-                    </span>
-                    <span id="lastSyncTime">Never</span>
+                <div class="sync-status-box">
+                    <div>
+                        <span class="sync-dot offline" id="syncDot"></span>
+                        <span class="sync-label" id="syncLabel">Offline</span>
+                    </div>
+                    <span class="sync-time" id="lastSyncTime">Never</span>
                 </div>
-                <button id="logoutBtn" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
+                <button id="logoutBtn" class="logout-btn-sidebar">
+                    <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </div>
         </aside>
@@ -89,27 +140,27 @@
         <!-- ===== MAIN CONTENT ===== -->
         <main id="main-content">
 
-            <!-- ===== TOP HEADER ===== -->
+            <!-- Top Header -->
             <header class="top-header">
                 <div class="header-left">
                     <h2 id="pageTitle">Dashboard</h2>
-                    <span id="currentDateTime" class="datetime"></span>
+                    <span class="page-indicator" id="currentDateTime"></span>
                 </div>
                 <div class="header-right">
-                    <div class="search-bar">
-                        <input type="text" id="globalSearchInput" placeholder="Search..." />
+                    <div class="search-bar-top">
+                        <input type="text" id="globalSearchInput" placeholder="Search anything..." />
                         <button id="globalSearchBtn"><i class="fas fa-search"></i></button>
                     </div>
-                    <div class="user-info">
-                        <span id="userNameDisplay">Admin</span>
-                        <img src="https://ui-avatars.com/api/?name=Admin&background=4F46E5&color=fff&size=40" alt="Avatar" />
+                    <div class="user-profile">
+                        <span class="user-name" id="userNameDisplay">Admin</span>
+                        <div class="user-avatar" id="userAvatar">A</div>
                     </div>
                 </div>
             </header>
 
-            <!-- ===== PAGE CONTENT ===== -->
+            <!-- Page Content -->
             <section id="pageContent">
-                <!-- Pages will be dynamically loaded here -->
+                <!-- Dynamic content loads here -->
             </section>
 
         </main>
@@ -121,22 +172,10 @@
     <!-- ===== MODAL CONTAINER ===== -->
     <div id="modalContainer"></div>
 
-    <!-- ===== SCRIPTS ===== -->
-    <script src="js/utils.js"></script>
-    <script src="js/db.js"></script>
-    <script src="js/sync.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/stock-in.js"></script>
-    <script src="js/stock-out.js"></script>
-    <script src="js/stock-balance.js"></script>
-    <script src="js/reports.js"></script>
-    <script src="js/ledger.js"></script>
-    <script src="js/search.js"></script>
-    <script src="js/printing.js"></script>
-    <script src="js/barcode.js"></script>
-    <script src="js/settings.js"></script>
-    <script src="js/backup.js"></script>
+    <!-- ============================================================
+    SCRIPTS
+    ============================================================ -->
     <script src="js/app.js"></script>
+
 </body>
 </html>
