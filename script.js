@@ -1,12 +1,22 @@
 // ============================================================
-// KRT TRADERS ERP – Complete System
-// Single File – All Modules
+// ⚡ SUPABASE CONFIGURATION (AUTO-CONFIGURED)
+// ============================================================
+const SUPABASE_CONFIG = {
+    URL: 'https://pukopnrxgitwataauvgo.supabase.co',
+    API_KEY: 'sb_publishable_vOC-igCOGRZ6lmIegNTZHA_2kWXn1ve'
+};
+
+
+
+
+// ============================================================
+// KRT TRADERS ERP – Complete JavaScript
+// All-in-One File
 // ============================================================
 
 // ============================================================
 // UTILITY FUNCTIONS
 // ============================================================
-
 const Utils = {
     generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
@@ -18,161 +28,20 @@ const Utils = {
             full: { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' },
             date: { year: 'numeric', month: 'short', day: 'numeric' },
             time: { hour: '2-digit', minute: '2-digit' },
-            short: { month: 'short', day: 'numeric' }
+            short: { month: 'short', day: 'numeric' },
+            iso: { year: 'numeric', month: '2-digit', day: '2-digit' }
         };
         return d.toLocaleDateString('en-US', opts[format] || opts.full);
     },
 
-    formatCurrency(amount, currency = 'PKR') {
-        if (amount === undefined || amount === null) return '0';
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: currency,
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }).format(amount);
+    formatCurrency(amount) {
+        if (amount === undefined || amount === null) return '₨ 0';
+        return '₨ ' + new Intl.NumberFormat('en-US').format(Math.round(amount));
     },
 
     formatNumber(num) {
         if (num === undefined || num === null) return '0';
         return new Intl.NumberFormat('en-US').format(num);
-    },
-
-    debounce(fn, delay = 300) {
-        let timer;
-        return function(...args) {
-            clearTimeout(timer);
-            timer = setTimeout(() => fn.apply(this, args), delay);
-        };
-    },
-
-    deepClone(obj) {
-        return JSON.parse(JSON.stringify(obj));
-    },
-
-    isValidEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    },
-
-    isValidPhone(phone) {
-        return /^[\+\d\s\-\(\)]{7,20}$/.test(phone);
-    },
-
-    truncate(str, len = 50) {
-        if (!str) return '';
-        return str.length > len ? str.substring(0, len) + '...' : str;
-    },
-
-    randomColor() {
-        const colors = ['#4F46E5', '#0EA5E9', '#22C55E', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
-        return colors[Math.floor(Math.random() * colors.length)];
-    },
-
-    downloadFile(content, filename, type = 'application/json') {
-        const blob = new Blob([content], { type });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    },
-
-    arrayToCSV(data, headers) {
-        const headerRow = headers.join(',');
-        const rows = data.map(item => headers.map(h => `"${item[h] || ''}"`).join(','));
-        return [headerRow, ...rows].join('\n');
-    },
-
-    safeJSONParse(str, fallback = null) {
-        try {
-            return JSON.parse(str);
-        } catch {
-            return fallback;
-        }
-    },
-
-    timeAgo(date) {
-        const now = new Date();
-        const diff = Math.floor((now - new Date(date)) / 1000);
-        if (diff < 60) return 'just now';
-        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-        if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
-        return this.formatDate(date, 'date');
-    },
-
-    generateBarcode(prefix = 'KRT') {
-        const num = Math.random().toString(36).substr(2, 6).toUpperCase();
-        return `${prefix}-${num}`;
-    },
-
-    calculateTax(amount, rate) {
-        return (amount * rate) / 100;
-    },
-
-    calculateProfit(sellPrice, buyPrice, qty = 1) {
-        return (sellPrice - buyPrice) * qty;
-    },
-
-    calculateMargin(sellPrice, buyPrice) {
-        if (buyPrice === 0) return 0;
-        return ((sellPrice - buyPrice) / buyPrice) * 100;
-    },
-
-    groupBy(array, key) {
-        return array.reduce((acc, item) => {
-            const group = item[key] || 'undefined';
-            if (!acc[group]) acc[group] = [];
-            acc[group].push(item);
-            return acc;
-        }, {});
-    },
-
-    sumBy(array, key) {
-        return array.reduce((sum, item) => sum + (parseFloat(item[key]) || 0), 0);
-    },
-
-    unique(arr) {
-        return [...new Set(arr)];
-    },
-
-    paginate(array, page = 1, perPage = 20) {
-        const start = (page - 1) * perPage;
-        const end = start + perPage;
-        return {
-            data: array.slice(start, end),
-            total: array.length,
-            page,
-            perPage,
-            totalPages: Math.ceil(array.length / perPage)
-        };
-    },
-
-    searchFilter(array, searchTerm, keys) {
-        if (!searchTerm) return array;
-        const term = searchTerm.toLowerCase().trim();
-        return array.filter(item => {
-            return keys.some(key => {
-                const val = String(item[key] || '').toLowerCase();
-                return val.includes(term);
-            });
-        });
-    },
-
-    sortData(array, key, direction = 'asc') {
-        const sorted = [...array];
-        sorted.sort((a, b) => {
-            const valA = a[key] || '';
-            const valB = b[key] || '';
-            if (typeof valA === 'string') {
-                return direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-            }
-            return direction === 'asc' ? valA - valB : valB - valA;
-        });
-        return sorted;
     },
 
     toast(message, type = 'info', duration = 4000) {
@@ -191,14 +60,41 @@ const Utils = {
         toast.innerHTML = `
             <i class="fas ${icons[type] || icons.info}"></i>
             <span>${message}</span>
+            <button class="toast-close">&times;</button>
         `;
         container.appendChild(toast);
 
-        setTimeout(() => {
+        const closeToast = () => {
             toast.style.opacity = '0';
             toast.style.transform = 'translateX(100px)';
             setTimeout(() => toast.remove(), 400);
-        }, duration);
+        };
+
+        toast.querySelector('.toast-close').addEventListener('click', closeToast);
+
+        setTimeout(closeToast, duration);
+    },
+
+    confirm(message, title = 'Confirm') {
+        return new Promise((resolve) => {
+            const overlay = document.getElementById('confirmDialog');
+            if (!overlay) return resolve(false);
+
+            overlay.style.display = 'flex';
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+
+            const close = (result) => {
+                overlay.style.display = 'none';
+                resolve(result);
+            };
+
+            document.getElementById('confirmYes').onclick = () => close(true);
+            document.getElementById('confirmNo').onclick = () => close(false);
+            overlay.querySelector('.confirm-overlay').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) close(false);
+            });
+        });
     },
 
     showModal(content, title = '', size = '') {
@@ -238,55 +134,6 @@ const Utils = {
         return modal;
     },
 
-    confirm(message, title = 'Confirm') {
-        return new Promise((resolve) => {
-            const container = document.getElementById('modalContainer');
-            if (!container) return resolve(false);
-
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay';
-            modal.innerHTML = `
-                <div class="modal-box" style="max-width:420px;">
-                    <div class="modal-header">
-                        <h3>${title}</h3>
-                        <button class="modal-close">&times;</button>
-                    </div>
-                    <div class="modal-body" style="padding:20px 0;">
-                        <p style="font-size:1rem;color:var(--text-secondary);">${message}</p>
-                    </div>
-                    <div class="modal-footer" style="justify-content:center;gap:12px;">
-                        <button class="btn btn-outline" id="confirmNo">Cancel</button>
-                        <button class="btn btn-danger" id="confirmYes">Confirm</button>
-                    </div>
-                </div>
-            `;
-
-            container.innerHTML = '';
-            container.appendChild(modal);
-
-            const closeModal = () => {
-                modal.style.opacity = '0';
-                setTimeout(() => modal.remove(), 300);
-            };
-
-            modal.querySelector('.modal-close').addEventListener('click', closeModal);
-            modal.querySelector('#confirmNo').addEventListener('click', () => {
-                closeModal();
-                resolve(false);
-            });
-            modal.querySelector('#confirmYes').addEventListener('click', () => {
-                closeModal();
-                resolve(true);
-            });
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeModal();
-                    resolve(false);
-                }
-            });
-        });
-    },
-
     getSettings() {
         const settings = DB.readAll(DB.TABLES.SETTINGS);
         if (settings.length === 0) {
@@ -297,7 +144,7 @@ const Utils = {
                 phone: '+92-300-1234567',
                 taxRate: 0,
                 currency: 'PKR',
-                theme: 'light',
+                theme: 'dark',
                 invoicePrefix: 'INV-',
                 footerNote: 'Thank you for your business!'
             };
@@ -310,13 +157,63 @@ const Utils = {
     updateSettings(updates) {
         const settings = this.getSettings();
         return DB.update(DB.TABLES.SETTINGS, settings.id, updates);
+    },
+
+    generateBarcode(prefix = 'KRT') {
+        const num = Math.random().toString(36).substr(2, 6).toUpperCase();
+        return `${prefix}-${num}`;
+    },
+
+    debounce(fn, delay = 300) {
+        let timer;
+        return function(...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(this, args), delay);
+        };
+    },
+
+    downloadFile(content, filename, type = 'application/json') {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    },
+
+    arrayToCSV(data, headers) {
+        const headerRow = headers.join(',');
+        const rows = data.map(item => {
+            return headers.map(h => {
+                let val = item[h] || '';
+                if (typeof val === 'string' && val.includes(',')) {
+                    val = `"${val}"`;
+                }
+                return val;
+            }).join(',');
+        });
+        return [headerRow, ...rows].join('\n');
+    },
+
+    getSupabaseConfig() {
+        return {
+            url: localStorage.getItem('supabase_url') || '',
+            key: localStorage.getItem('supabase_key') || ''
+        };
+    },
+
+    setSupabaseConfig(url, key) {
+        if (url) localStorage.setItem('supabase_url', url);
+        if (key) localStorage.setItem('supabase_key', key);
     }
 };
 
 // ============================================================
 // DATABASE LAYER
 // ============================================================
-
 const DB = {
     TABLES: {
         USERS: 'krt_users',
@@ -333,7 +230,7 @@ const DB = {
     _getTable(tableName) {
         try {
             const data = localStorage.getItem(tableName);
-            return data ? Utils.safeJSONParse(data, []) : [];
+            return data ? JSON.parse(data) : [];
         } catch {
             return [];
         }
@@ -401,71 +298,6 @@ const DB = {
         return true;
     },
 
-    bulkCreate(table, records) {
-        const data = this._getTable(table);
-        records.forEach(record => {
-            record.id = record.id || Utils.generateId();
-            record.createdAt = record.createdAt || new Date().toISOString();
-            record.updatedAt = new Date().toISOString();
-            data.push(record);
-        });
-        this._setTable(table, data);
-        records.forEach(r => this._queueSync(table, 'create', r));
-        return records;
-    },
-
-    query(table, options = {}) {
-        let data = this._getTable(table);
-        const { search, searchKeys = [], filters = {}, sort, sortDir = 'asc', page = 1, perPage = 20 } = options;
-
-        if (search && searchKeys.length) {
-            const term = search.toLowerCase().trim();
-            data = data.filter(item => {
-                return searchKeys.some(key => {
-                    const val = String(item[key] || '').toLowerCase();
-                    return val.includes(term);
-                });
-            });
-        }
-
-        Object.keys(filters).forEach(key => {
-            if (filters[key] !== undefined && filters[key] !== '') {
-                data = data.filter(item => {
-                    const val = item[key];
-                    const filterVal = filters[key];
-                    if (typeof filterVal === 'string') {
-                        return String(val).toLowerCase().includes(filterVal.toLowerCase());
-                    }
-                    return val === filterVal;
-                });
-            }
-        });
-
-        if (sort) {
-            data.sort((a, b) => {
-                const valA = a[sort] || '';
-                const valB = b[sort] || '';
-                if (typeof valA === 'string') {
-                    return sortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                }
-                return sortDir === 'asc' ? valA - valB : valB - valA;
-            });
-        }
-
-        const total = data.length;
-        const start = (page - 1) * perPage;
-        const end = start + perPage;
-        const paginated = data.slice(start, end);
-
-        return {
-            data: paginated,
-            total,
-            page,
-            perPage,
-            totalPages: Math.ceil(total / perPage)
-        };
-    },
-
     _queueSync(table, action, data) {
         const queue = this._getTable(this.TABLES.SYNC_QUEUE);
         queue.push({
@@ -486,29 +318,6 @@ const DB = {
     getPendingSyncCount() {
         const queue = this._getTable(this.TABLES.SYNC_QUEUE);
         return queue.filter(item => !item.synced).length;
-    },
-
-    clearAll() {
-        Object.values(this.TABLES).forEach(table => {
-            localStorage.removeItem(table);
-        });
-        localStorage.removeItem('krt_session');
-    },
-
-    exportAll() {
-        const data = {};
-        Object.values(this.TABLES).forEach(table => {
-            data[table] = this._getTable(table);
-        });
-        return data;
-    },
-
-    importAll(data) {
-        Object.keys(data).forEach(table => {
-            if (Object.values(this.TABLES).includes(table)) {
-                this._setTable(table, data[table]);
-            }
-        });
     },
 
     getStockBalance() {
@@ -558,29 +367,56 @@ const DB = {
         });
 
         return result.filter(item => item.available > 0 || item.totalIn > 0);
+    },
+
+    clearAll() {
+        Object.values(this.TABLES).forEach(table => localStorage.removeItem(table));
+        localStorage.removeItem('krt_session');
+    },
+
+    exportAll() {
+        const data = {};
+        Object.values(this.TABLES).forEach(table => {
+            data[table] = this._getTable(table);
+        });
+        return data;
+    },
+
+    importAll(data) {
+        Object.keys(data).forEach(table => {
+            if (Object.values(this.TABLES).includes(table)) {
+                this._setTable(table, data[table]);
+            }
+        });
+    },
+
+    getTableCounts() {
+        const counts = {};
+        Object.values(this.TABLES).forEach(table => {
+            counts[table] = this._getTable(table).length;
+        });
+        return counts;
     }
 };
 
 // ============================================================
-// SYNC MANAGER
+// SYNC MANAGER (Supabase)
 // ============================================================
-
 const SyncManager = {
-    supabaseUrl: '',
-    supabaseKey: '',
     isConnected: false,
+    isSyncing: false,
+    syncInterval: null,
 
-    init(url, key) {
-        this.supabaseUrl = url;
-        this.supabaseKey = key;
+    init() {
         this._checkConnection();
         this._setupListeners();
+        this._startAutoSync();
     },
 
     _checkConnection() {
         this.isConnected = navigator.onLine;
         this._updateUI();
-        if (this.isConnected && this.supabaseUrl) {
+        if (this.isConnected) {
             this.processQueue();
         }
     },
@@ -598,40 +434,59 @@ const SyncManager = {
             this._updateUI();
             Utils.toast('Internet disconnected. Working offline.', 'warning');
         });
+    },
 
-        // Periodic sync check
-        setInterval(() => {
-            if (this.isConnected && this.supabaseUrl) {
+    _startAutoSync() {
+        if (this.syncInterval) clearInterval(this.syncInterval);
+        this.syncInterval = setInterval(() => {
+            if (this.isConnected) {
                 this.processQueue();
             }
         }, 30000);
     },
 
     _updateUI() {
-        const indicator = document.getElementById('syncIndicator');
-        const lastSync = document.getElementById('lastSyncTime');
+        const dot = document.getElementById('syncDot');
+        const label = document.getElementById('syncLabel');
+        const time = document.getElementById('lastSyncTime');
+        const btn = document.getElementById('syncNowBtn');
         const pending = DB.getPendingSyncCount();
 
-        if (indicator) {
-            if (this.isConnected) {
-                indicator.className = 'sync-online';
-                indicator.innerHTML = `<i class="fas fa-cloud"></i> Online`;
+        if (dot && label) {
+            if (this.isSyncing) {
+                dot.className = 'sync-dot syncing';
+                label.textContent = 'Syncing...';
+            } else if (this.isConnected) {
+                dot.className = 'sync-dot online';
+                label.textContent = pending > 0 ? `${pending} pending` : 'Online';
             } else {
-                indicator.className = 'sync-offline';
-                indicator.innerHTML = `<i class="fas fa-cloud"></i> Offline`;
-            }
-            if (pending > 0) {
-                indicator.innerHTML += ` (${pending} pending)`;
+                dot.className = 'sync-dot offline';
+                label.textContent = 'Offline';
             }
         }
 
-        if (lastSync) {
-            lastSync.textContent = pending > 0 ? 'Syncing...' : `Last sync: ${Utils.formatDate(new Date(), 'time')}`;
+        if (time) {
+            const lastSync = localStorage.getItem('krt_last_sync');
+            time.textContent = lastSync ? new Date(lastSync).toLocaleTimeString() : 'Never';
+        }
+
+        if (btn) {
+            if (this.isSyncing) {
+                btn.classList.add('syncing');
+            } else {
+                btn.classList.remove('syncing');
+            }
         }
     },
 
     async processQueue() {
-        if (!this.isConnected || !this.supabaseUrl) return;
+        if (!this.isConnected || this.isSyncing) return;
+
+        const config = Utils.getSupabaseConfig();
+        if (!config.url || !config.key) {
+            // No Supabase configured, skip
+            return;
+        }
 
         const queue = DB._getTable(DB.TABLES.SYNC_QUEUE);
         const pending = queue.filter(item => !item.synced);
@@ -641,51 +496,98 @@ const SyncManager = {
             return;
         }
 
+        this.isSyncing = true;
         this._updateUI();
         Utils.toast(`Syncing ${pending.length} items...`, 'info');
 
+        let syncedCount = 0;
+        let failedCount = 0;
+
         for (const item of pending) {
             try {
-                await this._syncItem(item);
+                await this._syncToSupabase(item);
                 item.synced = true;
                 item.syncedAt = new Date().toISOString();
-                DB._setTable(DB.TABLES.SYNC_QUEUE, queue);
+                syncedCount++;
             } catch (error) {
                 item.attempts += 1;
-                if (item.attempts > 5) {
+                failedCount++;
+                if (item.attempts >= 5) {
                     item.synced = true; // Skip after 5 attempts
                     Utils.toast(`Sync failed for ${item.table}: ${error.message}`, 'error');
                 }
-                DB._setTable(DB.TABLES.SYNC_QUEUE, queue);
             }
+            DB._setTable(DB.TABLES.SYNC_QUEUE, queue);
         }
 
         // Clean up synced items
         const updatedQueue = DB._getTable(DB.TABLES.SYNC_QUEUE);
-        const filtered = updatedQueue.filter(item => !item.synced || item.attempts > 5);
+        const filtered = updatedQueue.filter(item => !item.synced);
         DB._setTable(DB.TABLES.SYNC_QUEUE, filtered);
 
+        this.isSyncing = false;
+        localStorage.setItem('krt_last_sync', new Date().toISOString());
         this._updateUI();
-        Utils.toast('Sync complete!', 'success');
+
+        if (syncedCount > 0) {
+            Utils.toast(`Synced ${syncedCount} items!`, 'success');
+        }
+        if (failedCount > 0) {
+            Utils.toast(`${failedCount} items failed to sync`, 'error');
+        }
     },
 
-    async _syncItem(item) {
-        // Simulate API call
-        return new Promise((resolve) => {
-            setTimeout(resolve, 200);
-        });
+    async _syncToSupabase(item) {
+        const config = Utils.getSupabaseConfig();
+        if (!config.url || !config.key) return;
 
-        // Real implementation with Supabase:
-        /*
-        const { data, error } = await supabase
-            .from(item.table)
-            [item.action === 'delete' ? 'delete' : 'upsert'](item.data);
-        if (error) throw error;
-        */
+        const tableName = item.table.replace('krt_', '');
+        const url = `${config.url}/rest/v1/${tableName}`;
+
+        let method = 'POST';
+        let body = item.data;
+
+        if (item.action === 'update') {
+            method = 'PATCH';
+            body = { ...item.data };
+            delete body.id;
+        } else if (item.action === 'delete') {
+            method = 'DELETE';
+            body = null;
+        }
+
+        const headers = {
+            'apikey': config.key,
+            'Authorization': `Bearer ${config.key}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+        };
+
+        let finalUrl = url;
+        if (item.action === 'delete' || item.action === 'update') {
+            finalUrl = `${url}?id=eq.${item.data.id}`;
+        }
+
+        const options = {
+            method,
+            headers
+        };
+
+        if (body && method !== 'DELETE') {
+            options.body = JSON.stringify(body);
+        }
+
+        const response = await fetch(finalUrl, options);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        return response;
     },
 
     forceSync() {
-        if (!this.supabaseUrl) {
+        const config = Utils.getSupabaseConfig();
+        if (!config.url || !config.key) {
             Utils.toast('Please configure Supabase in Settings first', 'warning');
             return;
         }
@@ -696,7 +598,6 @@ const SyncManager = {
 // ============================================================
 // AUTHENTICATION
 // ============================================================
-
 const Auth = {
     SESSION_KEY: 'krt_session',
 
@@ -747,7 +648,7 @@ const Auth = {
 
     deleteUser(id) {
         const session = this.getSession();
-        if (session && session.id === id) {
+        if (session && session.userId === id) {
             throw new Error('Cannot delete your own account');
         }
         return DB.delete(DB.TABLES.USERS, id);
@@ -787,7 +688,7 @@ const Auth = {
 
     getSession() {
         const data = localStorage.getItem(this.SESSION_KEY);
-        return data ? Utils.safeJSONParse(data) : null;
+        return data ? JSON.parse(data) : null;
     },
 
     checkSession() {
@@ -816,55 +717,12 @@ const Auth = {
     },
 
     _showLogin() {
+        const loginPage = document.getElementById('loginPage');
         const app = document.getElementById('app');
-        if (!app) return;
+        if (loginPage) loginPage.style.display = 'flex';
+        if (app) app.classList.remove('active');
 
-        app.innerHTML = `
-            <div class="login-page" style="
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                min-height:100vh;
-                background:linear-gradient(135deg,#0F172A 0%,#1E293B 100%);
-                padding:20px;
-            ">
-                <div class="login-box" style="
-                    background:#fff;
-                    padding:48px 40px;
-                    border-radius:16px;
-                    max-width:400px;
-                    width:100%;
-                    box-shadow:0 20px 60px rgba(0,0,0,0.3);
-                ">
-                    <div style="text-align:center;margin-bottom:32px;">
-                        <div style="font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,#818CF8,#4F46E5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
-                            KRT TRADERS
-                        </div>
-                        <p style="color:var(--text-secondary);font-weight:500;">Enterprise ERP System</p>
-                    </div>
-
-                    <form id="loginForm">
-                        <div class="form-group">
-                            <label>Username</label>
-                            <input type="text" id="loginUsername" class="form-control" placeholder="Enter username" value="admin" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Password</label>
-                            <input type="password" id="loginPassword" class="form-control" placeholder="Enter password" value="admin123" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:1rem;">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </button>
-                    </form>
-
-                    <div style="margin-top:16px;text-align:center;font-size:0.85rem;color:var(--text-light);">
-                        Default: admin / admin123
-                    </div>
-                </div>
-            </div>
-        `;
-
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        document.getElementById('loginForm')?.addEventListener('submit', (e) => {
             e.preventDefault();
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
@@ -872,7 +730,9 @@ const Auth = {
             try {
                 this.login(username, password);
                 Utils.toast('Login successful!', 'success');
-                window.location.reload();
+                if (loginPage) loginPage.style.display = 'none';
+                if (app) app.classList.add('active');
+                App.init();
             } catch (error) {
                 Utils.toast(error.message, 'error');
             }
@@ -880,30 +740,25 @@ const Auth = {
     },
 
     _updateUI(session) {
-        const userNameDisplay = document.getElementById('userNameDisplay');
-        if (userNameDisplay && session) {
-            userNameDisplay.textContent = session.name || session.username;
+        const nameDisplay = document.getElementById('userNameDisplay');
+        const avatar = document.getElementById('userAvatar');
+        const sidebarName = document.getElementById('sidebarUserName');
+        const sidebarAvatar = document.getElementById('sidebarAvatar');
+
+        if (session) {
+            const name = session.name || session.username;
+            const initial = name[0].toUpperCase();
+            if (nameDisplay) nameDisplay.textContent = name;
+            if (avatar) avatar.textContent = initial;
+            if (sidebarName) sidebarName.textContent = name;
+            if (sidebarAvatar) sidebarAvatar.textContent = initial;
         }
-    },
-
-    changePassword(userId, oldPassword, newPassword) {
-        const user = DB.read(DB.TABLES.USERS, userId);
-        if (!user) throw new Error('User not found');
-
-        if (!this.verifyPassword(oldPassword, user.password)) {
-            throw new Error('Current password is incorrect');
-        }
-
-        return this.updateUser(userId, {
-            password: this.hashPassword(newPassword)
-        });
     }
 };
 
 // ============================================================
 // MAIN APPLICATION
 // ============================================================
-
 const App = {
     currentPage: 'dashboard',
 
@@ -912,13 +767,17 @@ const App = {
         this._setupGlobalSearch();
         this._setupLogout();
         this._setupSidebarToggle();
+        this._setupUserDropdown();
+        this._setupFullscreen();
         this._updateDateTime();
         setInterval(() => this._updateDateTime(), 1000);
+        SyncManager.init();
+
+        // Update counts
+        this._updateCounts();
 
         // Load default page
-        if (Auth.isAuthenticated()) {
-            this.loadPage('dashboard');
-        }
+        this.loadPage('dashboard');
     },
 
     _setupNavigation() {
@@ -942,7 +801,6 @@ const App = {
             const query = input.value.trim();
             if (query) {
                 this.loadPage('search');
-                // Search will handle the query
                 setTimeout(() => {
                     const searchInput = document.getElementById('searchQuery');
                     if (searchInput) {
@@ -963,9 +821,14 @@ const App = {
     _setupLogout() {
         document.getElementById('logoutBtn')?.addEventListener('click', () => {
             Utils.confirm('Are you sure you want to logout?', 'Logout').then(confirmed => {
-                if (confirmed) {
-                    Auth.logout();
-                }
+                if (confirmed) Auth.logout();
+            });
+        });
+
+        document.getElementById('logoutDropdown')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            Utils.confirm('Are you sure you want to logout?', 'Logout').then(confirmed => {
+                if (confirmed) Auth.logout();
             });
         });
     },
@@ -978,7 +841,6 @@ const App = {
             sidebar.classList.toggle('open');
         });
 
-        // Close sidebar on outside click (mobile)
         document.addEventListener('click', (e) => {
             if (window.innerWidth <= 768) {
                 if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
@@ -988,19 +850,52 @@ const App = {
         });
     },
 
+    _setupUserDropdown() {
+        const profile = document.getElementById('userProfile');
+        const dropdown = document.getElementById('userDropdown');
+
+        profile?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('show');
+        });
+
+        document.addEventListener('click', () => {
+            dropdown?.classList.remove('show');
+        });
+    },
+
+    _setupFullscreen() {
+        document.getElementById('fullscreenBtn')?.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
+            }
+        });
+    },
+
     _updateDateTime() {
         const el = document.getElementById('currentDateTime');
         if (el) {
             el.textContent = new Date().toLocaleString('en-US', {
                 weekday: 'short',
-                year: 'numeric',
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
+                minute: '2-digit'
             });
         }
+    },
+
+    _updateCounts() {
+        const counts = DB.getTableCounts();
+        const stockInCount = document.getElementById('stockInCount');
+        const stockOutCount = document.getElementById('stockOutCount');
+        const ledgerCount = document.getElementById('ledgerCount');
+
+        if (stockInCount) stockInCount.textContent = counts[DB.TABLES.STOCK_IN] || 0;
+        if (stockOutCount) stockOutCount.textContent = counts[DB.TABLES.STOCK_OUT] || 0;
+        if (ledgerCount) ledgerCount.textContent = counts[DB.TABLES.LEDGER] || 0;
     },
 
     loadPage(page) {
@@ -1042,12 +937,10 @@ const App = {
     // ============================================================
     // DASHBOARD
     // ============================================================
-
     _renderDashboard() {
         const content = document.getElementById('pageContent');
         const stockIn = DB.readAll(DB.TABLES.STOCK_IN);
         const stockOut = DB.readAll(DB.TABLES.STOCK_OUT);
-        const items = DB.readAll(DB.TABLES.ITEMS);
         const balance = DB.getStockBalance();
 
         const totalStock = balance.reduce((sum, item) => sum + item.available, 0);
@@ -1057,59 +950,68 @@ const App = {
         const today = new Date().toISOString().split('T')[0];
         const todaySales = stockOut.filter(s => s.createdAt?.startsWith(today));
         const todayPurchases = stockIn.filter(s => s.createdAt?.startsWith(today));
-
         const lowStock = balance.filter(item => item.available <= 5);
+
+        const recentTransactions = this._getRecentTransactions();
 
         content.innerHTML = `
             <div class="dashboard-grid">
                 <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-boxes"></i></div>
+                    <div class="stat-top">
+                        <div class="stat-icon"><i class="fas fa-boxes"></i></div>
+                    </div>
                     <div class="stat-label">Total Stock</div>
                     <div class="stat-value">${Utils.formatNumber(totalStock)}</div>
                 </div>
-                <div class="stat-card color-success">
-                    <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-icon green"><i class="fas fa-money-bill-wave"></i></div>
+                    </div>
                     <div class="stat-label">Stock Value</div>
                     <div class="stat-value">${Utils.formatCurrency(stockValue)}</div>
                 </div>
-                <div class="stat-card color-info">
-                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-icon blue"><i class="fas fa-chart-line"></i></div>
+                    </div>
                     <div class="stat-label">Total Profit</div>
                     <div class="stat-value">${Utils.formatCurrency(totalProfit)}</div>
                 </div>
-                <div class="stat-card color-warning">
-                    <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-icon orange"><i class="fas fa-shopping-cart"></i></div>
+                    </div>
                     <div class="stat-label">Today's Sales</div>
                     <div class="stat-value">${Utils.formatNumber(todaySales.length)}</div>
                 </div>
-                <div class="stat-card color-secondary">
-                    <div class="stat-icon"><i class="fas fa-truck"></i></div>
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-icon"><i class="fas fa-truck"></i></div>
+                    </div>
                     <div class="stat-label">Today's Purchases</div>
                     <div class="stat-value">${Utils.formatNumber(todayPurchases.length)}</div>
                 </div>
-                <div class="stat-card color-danger">
-                    <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+                    </div>
                     <div class="stat-label">Low Stock Items</div>
                     <div class="stat-value">${lowStock.length}</div>
                 </div>
             </div>
 
-            <div class="dashboard-bottom">
+            <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
                 <div class="card">
-                    <h3><i class="fas fa-clock"></i> Recent Transactions</h3>
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-clock"></i> Recent Transactions</div>
+                    </div>
                     <div class="table-responsive">
                         <table>
                             <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Type</th>
-                                    <th>Item</th>
-                                    <th>Qty</th>
-                                    <th>Amount</th>
-                                </tr>
+                                <tr><th>Date</th><th>Type</th><th>Item</th><th>Qty</th><th>Amount</th></tr>
                             </thead>
                             <tbody>
-                                ${this._getRecentTransactions().map(t => `
+                                ${recentTransactions.map(t => `
                                     <tr>
                                         <td>${Utils.formatDate(t.createdAt, 'short')}</td>
                                         <td><span class="badge ${t.type === 'IN' ? 'badge-success' : 'badge-info'}">${t.type}</span></td>
@@ -1118,59 +1020,58 @@ const App = {
                                         <td>${Utils.formatCurrency(t.total || 0)}</td>
                                     </tr>
                                 `).join('')}
-                                ${this._getRecentTransactions().length === 0 ? '<tr><td colspan="5" class="text-center text-muted">No transactions</td></tr>' : ''}
+                                ${recentTransactions.length === 0 ? '<tr><td colspan="5" class="table-empty"><i class="fas fa-inbox"></i>No transactions</td></tr>' : ''}
                             </tbody>
                         </table>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h3><i class="fas fa-exclamation-circle"></i> Low Stock Alert</h3>
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-exclamation-circle"></i> Low Stock Alert</div>
+                    </div>
                     <div class="table-responsive">
                         <table>
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th>Available</th>
-                                    <th>Unit</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Item</th><th>Qty</th></tr></thead>
                             <tbody>
                                 ${lowStock.slice(0, 10).map(item => `
                                     <tr>
                                         <td>${item.itemName}</td>
                                         <td class="text-danger">${item.available}</td>
-                                        <td>${item.unit}</td>
                                     </tr>
                                 `).join('')}
-                                ${lowStock.length === 0 ? '<tr><td colspan="3" class="text-center text-muted">All items in stock</td></tr>' : ''}
+                                ${lowStock.length === 0 ? '<tr><td colspan="2" class="table-empty"><i class="fas fa-check-circle"></i>All items in stock</td></tr>' : ''}
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <div class="card mt-24">
-                <h3><i class="fas fa-cloud"></i> Sync Status</h3>
-                <div style="display:flex;gap:20px;flex-wrap:wrap;">
+            <div class="card" style="margin-top:20px;">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-cloud"></i> Sync Status</div>
+                    <button class="btn btn-sm btn-primary" onclick="SyncManager.forceSync()">
+                        <i class="fas fa-sync"></i> Sync Now
+                    </button>
+                </div>
+                <div style="display:flex;gap:24px;flex-wrap:wrap;">
                     <div>
-                        <strong>Status:</strong>
-                        <span id="syncStatusDash" class="${navigator.onLine ? 'text-success' : 'text-danger'}">
+                        <span style="color:var(--text-secondary);">Status:</span>
+                        <span id="dashSyncStatus" class="${navigator.onLine ? 'text-success' : 'text-danger'}">
                             ${navigator.onLine ? '🟢 Online' : '🔴 Offline'}
                         </span>
                     </div>
                     <div>
-                        <strong>Pending Sync:</strong>
+                        <span style="color:var(--text-secondary);">Pending Sync:</span>
                         <span>${DB.getPendingSyncCount()}</span>
                     </div>
                     <div>
-                        <strong>Total Items:</strong>
-                        <span>${items.length}</span>
+                        <span style="color:var(--text-secondary);">Total Items:</span>
+                        <span>${DB.getStockBalance().length}</span>
                     </div>
                     <div>
-                        <button class="btn btn-primary btn-sm" onclick="SyncManager.forceSync()">
-                            <i class="fas fa-sync"></i> Sync Now
-                        </button>
+                        <span style="color:var(--text-secondary);">Last Sync:</span>
+                        <span>${localStorage.getItem('krt_last_sync') ? new Date(localStorage.getItem('krt_last_sync')).toLocaleString() : 'Never'}</span>
                     </div>
                 </div>
             </div>
@@ -1180,37 +1081,33 @@ const App = {
     _getRecentTransactions() {
         const stockIn = DB.readAll(DB.TABLES.STOCK_IN);
         const stockOut = DB.readAll(DB.TABLES.STOCK_OUT);
-
         const inData = stockIn.map(s => ({ ...s, type: 'IN', total: s.quantity * s.purchasePrice }));
         const outData = stockOut.map(s => ({ ...s, type: 'OUT', total: s.quantity * s.salePrice }));
-
         const combined = [...inData, ...outData];
-        return Utils.sortData(combined, 'createdAt', 'desc').slice(0, 10);
+        return combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 15);
     },
 
     // ============================================================
     // STOCK IN
     // ============================================================
-
     _renderStockIn() {
         const content = document.getElementById('pageContent');
         const stockIn = DB.readAll(DB.TABLES.STOCK_IN);
-        const vendors = DB.readAll(DB.TABLES.VENDORS);
 
         content.innerHTML = `
             <div class="flex-between mb-16">
-                <h2>Stock IN</h2>
+                <h2 style="font-size:1.2rem;">Stock IN</h2>
                 <button class="btn btn-primary" onclick="App._showStockInForm()">
                     <i class="fas fa-plus"></i> New Purchase
                 </button>
             </div>
 
-            <div class="card mb-16">
+            <div class="card">
                 <div class="flex flex-wrap gap-8">
-                    <input type="text" id="stockInSearch" class="form-control" style="flex:1;min-width:200px;" placeholder="Search by item, vendor, barcode...">
-                    <input type="date" id="stockInDateFilter" class="form-control" style="width:160px;">
-                    <button class="btn btn-outline" onclick="App._filterStockIn()"><i class="fas fa-filter"></i> Filter</button>
-                    <button class="btn btn-outline" onclick="App._clearStockInFilter()"><i class="fas fa-undo"></i> Clear</button>
+                    <input type="text" id="stockInSearch" class="form-control" style="flex:1;min-width:180px;" placeholder="Search by item, vendor, barcode..." />
+                    <input type="date" id="stockInDate" class="form-control" style="width:150px;" />
+                    <button class="btn btn-outline" onclick="App._filterStockIn()"><i class="fas fa-search"></i></button>
+                    <button class="btn btn-outline" onclick="document.getElementById('stockInSearch').value='';document.getElementById('stockInDate').value='';App._filterStockIn();"><i class="fas fa-undo"></i></button>
                     <button class="btn btn-success btn-sm" onclick="App._exportStockIn()"><i class="fas fa-file-excel"></i> Export</button>
                 </div>
             </div>
@@ -1219,16 +1116,7 @@ const App = {
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Vendor</th>
-                                <th>Item</th>
-                                <th>Barcode</th>
-                                <th>Qty</th>
-                                <th>Price</th>
-                                <th>Total</th>
-                                <th>Actions</th>
-                            </tr>
+                            <tr><th>Date</th><th>Vendor</th><th>Item</th><th>Barcode</th><th>Qty</th><th>Unit</th><th>Price</th><th>Total</th><th>Actions</th></tr>
                         </thead>
                         <tbody id="stockInTable">
                             ${stockIn.map(item => `
@@ -1238,30 +1126,30 @@ const App = {
                                     <td>${item.itemName}</td>
                                     <td><span class="badge badge-info">${item.barcode}</span></td>
                                     <td>${item.quantity}</td>
+                                    <td>${item.unit || 'pcs'}</td>
                                     <td>${Utils.formatCurrency(item.purchasePrice)}</td>
                                     <td>${Utils.formatCurrency(item.quantity * item.purchasePrice)}</td>
                                     <td>
                                         <button class="btn btn-primary btn-xs" onclick="App._editStockIn('${item.id}')"><i class="fas fa-edit"></i></button>
                                         <button class="btn btn-danger btn-xs" onclick="App._deleteStockIn('${item.id}')"><i class="fas fa-trash"></i></button>
-                                        <button class="btn btn-outline btn-xs" onclick="App._printPurchase('${item.id}')"><i class="fas fa-print"></i></button>
+                                        <button class="btn btn-outline btn-xs" onclick="App._printStockIn('${item.id}')"><i class="fas fa-print"></i></button>
                                     </td>
                                 </tr>
                             `).join('')}
-                            ${stockIn.length === 0 ? '<tr><td colspan="8" class="text-center text-muted">No stock entries</td></tr>' : ''}
+                            ${stockIn.length === 0 ? '<tr><td colspan="9" class="table-empty"><i class="fas fa-inbox"></i>No stock entries</td></tr>' : ''}
                         </tbody>
                     </table>
                 </div>
             </div>
         `;
 
-        // Setup search and filter
         document.getElementById('stockInSearch')?.addEventListener('input', Utils.debounce(this._filterStockIn, 300));
-        document.getElementById('stockInDateFilter')?.addEventListener('change', this._filterStockIn);
+        document.getElementById('stockInDate')?.addEventListener('change', this._filterStockIn);
     },
 
     _filterStockIn() {
         const search = document.getElementById('stockInSearch')?.value || '';
-        const date = document.getElementById('stockInDateFilter')?.value || '';
+        const date = document.getElementById('stockInDate')?.value || '';
         let data = DB.readAll(DB.TABLES.STOCK_IN);
 
         if (search) {
@@ -1286,22 +1174,17 @@ const App = {
                     <td>${item.itemName}</td>
                     <td><span class="badge badge-info">${item.barcode}</span></td>
                     <td>${item.quantity}</td>
+                    <td>${item.unit || 'pcs'}</td>
                     <td>${Utils.formatCurrency(item.purchasePrice)}</td>
                     <td>${Utils.formatCurrency(item.quantity * item.purchasePrice)}</td>
                     <td>
                         <button class="btn btn-primary btn-xs" onclick="App._editStockIn('${item.id}')"><i class="fas fa-edit"></i></button>
                         <button class="btn btn-danger btn-xs" onclick="App._deleteStockIn('${item.id}')"><i class="fas fa-trash"></i></button>
-                        <button class="btn btn-outline btn-xs" onclick="App._printPurchase('${item.id}')"><i class="fas fa-print"></i></button>
+                        <button class="btn btn-outline btn-xs" onclick="App._printStockIn('${item.id}')"><i class="fas fa-print"></i></button>
                     </td>
                 </tr>
-            `).join('') || '<tr><td colspan="8" class="text-center text-muted">No matching records</td></tr>';
+            `).join('') || '<tr><td colspan="9" class="table-empty"><i class="fas fa-inbox"></i>No matching records</td></tr>';
         }
-    },
-
-    _clearStockInFilter() {
-        document.getElementById('stockInSearch').value = '';
-        document.getElementById('stockInDateFilter').value = '';
-        this._filterStockIn();
     },
 
     _showStockInForm(data = null) {
@@ -1352,7 +1235,6 @@ const App = {
                             <option value="g" ${data?.unit === 'g' ? 'selected' : ''}>Gram</option>
                             <option value="ltr" ${data?.unit === 'ltr' ? 'selected' : ''}>Liter</option>
                             <option value="m" ${data?.unit === 'm' ? 'selected' : ''}>Meter</option>
-                            <option value="ft" ${data?.unit === 'ft' ? 'selected' : ''}>Feet</option>
                             <option value="box" ${data?.unit === 'box' ? 'selected' : ''}>Box</option>
                             <option value="pack" ${data?.unit === 'pack' ? 'selected' : ''}>Pack</option>
                         </select>
@@ -1362,7 +1244,7 @@ const App = {
                     <label>Notes</label>
                     <textarea id="siNotes" class="form-control" placeholder="Additional notes">${data?.notes || ''}</textarea>
                 </div>
-                <div class="flex gap-8" style="margin-top:12px;">
+                <div class="form-actions">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> ${isEdit ? 'Update' : 'Save'}</button>
                     <button type="button" class="btn btn-outline modal-close-btn">Cancel</button>
                 </div>
@@ -1417,24 +1299,22 @@ const App = {
         }
     },
 
-    _printPurchase(id) {
+    _printStockIn(id) {
         const data = DB.read(DB.TABLES.STOCK_IN, id);
         if (!data) return;
 
         const settings = Utils.getSettings();
-        const printWindow = window.open('', '_blank', 'width=600,height=600');
+        const printWindow = window.open('', '_blank', 'width=600,height=500');
         printWindow.document.write(`
-            <html>
-            <head><title>Purchase Entry</title>
+            <html><head><title>Purchase Entry</title>
             <style>
                 body { font-family: Arial, sans-serif; padding: 40px; }
                 .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
                 .header h1 { margin: 0; color: #4F46E5; }
-                .details { margin-bottom: 20px; }
-                .details table { width: 100%; }
-                .details td { padding: 6px 0; }
-                .footer { text-align: center; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px; color: #666; }
+                table { width: 100%; }
+                td { padding: 6px 0; }
                 .total { font-size: 1.2em; font-weight: bold; }
+                .footer { text-align: center; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px; color: #666; }
             </style>
             </head>
             <body>
@@ -1443,25 +1323,21 @@ const App = {
                     <p>${settings.address} | ${settings.phone}</p>
                     <p><strong>Purchase Entry</strong></p>
                 </div>
-                <div class="details">
-                    <table>
-                        <tr><td><strong>Date:</strong></td><td>${Utils.formatDate(data.createdAt)}</td></tr>
-                        <tr><td><strong>Vendor:</strong></td><td>${data.vendorName}</td></tr>
-                        <tr><td><strong>Item:</strong></td><td>${data.itemName}</td></tr>
-                        <tr><td><strong>Barcode:</strong></td><td>${data.barcode}</td></tr>
-                        <tr><td><strong>Quantity:</strong></td><td>${data.quantity} ${data.unit}</td></tr>
-                        <tr><td><strong>Price:</strong></td><td>${Utils.formatCurrency(data.purchasePrice)}</td></tr>
-                        <tr><td><strong>Total:</strong></td><td class="total">${Utils.formatCurrency(data.quantity * data.purchasePrice)}</td></tr>
-                        ${data.notes ? `<tr><td><strong>Notes:</strong></td><td>${data.notes}</td></tr>` : ''}
-                    </table>
-                </div>
+                <table>
+                    <tr><td><strong>Date:</strong></td><td>${Utils.formatDate(data.createdAt)}</td></tr>
+                    <tr><td><strong>Vendor:</strong></td><td>${data.vendorName}</td></tr>
+                    <tr><td><strong>Item:</strong></td><td>${data.itemName}</td></tr>
+                    <tr><td><strong>Barcode:</strong></td><td>${data.barcode}</td></tr>
+                    <tr><td><strong>Quantity:</strong></td><td>${data.quantity} ${data.unit}</td></tr>
+                    <tr><td><strong>Price:</strong></td><td>${Utils.formatCurrency(data.purchasePrice)}</td></tr>
+                    <tr><td><strong>Total:</strong></td><td class="total">${Utils.formatCurrency(data.quantity * data.purchasePrice)}</td></tr>
+                    ${data.notes ? `<tr><td><strong>Notes:</strong></td><td>${data.notes}</td></tr>` : ''}
+                </table>
                 <div class="footer">
                     <p>${settings.footerNote || 'Thank you for your business!'}</p>
                     <p>Generated: ${new Date().toLocaleString()}</p>
                 </div>
-                <script>
-                    window.onload = function() { window.print(); }
-                <\/script>
+                <script>window.onload = function() { window.print(); }</script>
             </body>
             </html>
         `);
@@ -1470,7 +1346,11 @@ const App = {
 
     _exportStockIn() {
         const data = DB.readAll(DB.TABLES.STOCK_IN);
-        const headers = ['Date', 'Vendor', 'Item', 'Barcode', 'Quantity', 'Unit', 'Price', 'Total', 'Notes'];
+        if (data.length === 0) {
+            Utils.toast('No data to export', 'warning');
+            return;
+        }
+        const headers = ['Date', 'Vendor', 'Item', 'Barcode', 'Quantity', 'Unit', 'Purchase Price', 'Total', 'Notes'];
         const csv = Utils.arrayToCSV(data.map(item => ({
             Date: Utils.formatDate(item.createdAt, 'date'),
             Vendor: item.vendorName || '',
@@ -1478,36 +1358,35 @@ const App = {
             Barcode: item.barcode,
             Quantity: item.quantity,
             Unit: item.unit || 'pcs',
-            Price: item.purchasePrice,
+            'Purchase Price': item.purchasePrice,
             Total: item.quantity * item.purchasePrice,
             Notes: item.notes || ''
         })), headers);
-        Utils.downloadFile(csv, 'stock_in_export.csv', 'text/csv');
+        Utils.downloadFile(csv, `stock_in_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
         Utils.toast('Stock IN exported!', 'success');
     },
 
     // ============================================================
     // STOCK OUT
     // ============================================================
-
     _renderStockOut() {
         const content = document.getElementById('pageContent');
         const stockOut = DB.readAll(DB.TABLES.STOCK_OUT);
 
         content.innerHTML = `
             <div class="flex-between mb-16">
-                <h2>Stock OUT</h2>
+                <h2 style="font-size:1.2rem;">Stock OUT</h2>
                 <button class="btn btn-primary" onclick="App._showStockOutForm()">
                     <i class="fas fa-plus"></i> New Sale
                 </button>
             </div>
 
-            <div class="card mb-16">
+            <div class="card">
                 <div class="flex flex-wrap gap-8">
-                    <input type="text" id="stockOutSearch" class="form-control" style="flex:1;min-width:200px;" placeholder="Search by item, customer, invoice...">
-                    <input type="date" id="stockOutDateFilter" class="form-control" style="width:160px;">
-                    <button class="btn btn-outline" onclick="App._filterStockOut()"><i class="fas fa-filter"></i> Filter</button>
-                    <button class="btn btn-outline" onclick="App._clearStockOutFilter()"><i class="fas fa-undo"></i> Clear</button>
+                    <input type="text" id="stockOutSearch" class="form-control" style="flex:1;min-width:180px;" placeholder="Search by item, customer, invoice..." />
+                    <input type="date" id="stockOutDate" class="form-control" style="width:150px;" />
+                    <button class="btn btn-outline" onclick="App._filterStockOut()"><i class="fas fa-search"></i></button>
+                    <button class="btn btn-outline" onclick="document.getElementById('stockOutSearch').value='';document.getElementById('stockOutDate').value='';App._filterStockOut();"><i class="fas fa-undo"></i></button>
                     <button class="btn btn-success btn-sm" onclick="App._exportStockOut()"><i class="fas fa-file-excel"></i> Export</button>
                 </div>
             </div>
@@ -1516,17 +1395,7 @@ const App = {
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr>
-                                <th>Invoice</th>
-                                <th>Date</th>
-                                <th>Customer</th>
-                                <th>Item</th>
-                                <th>Qty</th>
-                                <th>Price</th>
-                                <th>Total</th>
-                                <th>Profit</th>
-                                <th>Actions</th>
-                            </tr>
+                            <tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Item</th><th>Qty</th><th>Price</th><th>Total</th><th>Profit</th><th>Actions</th></tr>
                         </thead>
                         <tbody id="stockOutTable">
                             ${stockOut.map(item => `
@@ -1546,7 +1415,7 @@ const App = {
                                     </td>
                                 </tr>
                             `).join('')}
-                            ${stockOut.length === 0 ? '<tr><td colspan="9" class="text-center text-muted">No sales entries</td></tr>' : ''}
+                            ${stockOut.length === 0 ? '<tr><td colspan="9" class="table-empty"><i class="fas fa-inbox"></i>No sales entries</td></tr>' : ''}
                         </tbody>
                     </table>
                 </div>
@@ -1554,12 +1423,12 @@ const App = {
         `;
 
         document.getElementById('stockOutSearch')?.addEventListener('input', Utils.debounce(this._filterStockOut, 300));
-        document.getElementById('stockOutDateFilter')?.addEventListener('change', this._filterStockOut);
+        document.getElementById('stockOutDate')?.addEventListener('change', this._filterStockOut);
     },
 
     _filterStockOut() {
         const search = document.getElementById('stockOutSearch')?.value || '';
-        const date = document.getElementById('stockOutDateFilter')?.value || '';
+        const date = document.getElementById('stockOutDate')?.value || '';
         let data = DB.readAll(DB.TABLES.STOCK_OUT);
 
         if (search) {
@@ -1594,14 +1463,8 @@ const App = {
                         <button class="btn btn-outline btn-xs" onclick="App._printInvoice('${item.id}')"><i class="fas fa-print"></i></button>
                     </td>
                 </tr>
-            `).join('') || '<tr><td colspan="9" class="text-center text-muted">No matching records</td></tr>';
+            `).join('') || '<tr><td colspan="9" class="table-empty"><i class="fas fa-inbox"></i>No matching records</td></tr>';
         }
-    },
-
-    _clearStockOutFilter() {
-        document.getElementById('stockOutSearch').value = '';
-        document.getElementById('stockOutDateFilter').value = '';
-        this._filterStockOut();
     },
 
     _showStockOutForm(data = null) {
@@ -1661,7 +1524,7 @@ const App = {
                     <label>Notes</label>
                     <textarea id="soNotes" class="form-control" placeholder="Additional notes">${data?.notes || ''}</textarea>
                 </div>
-                <div class="flex gap-8" style="margin-top:12px;">
+                <div class="form-actions">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> ${isEdit ? 'Update' : 'Save'}</button>
                     <button type="button" class="btn btn-outline modal-close-btn">Cancel</button>
                 </div>
@@ -1683,7 +1546,7 @@ const App = {
             const taxAmount = ((subtotal - discountAmount) * tax) / 100;
             const total = subtotal - discountAmount + taxAmount;
 
-            // Calculate profit (need to find purchase price from stock in)
+            // Calculate profit
             const stockIn = DB.readAll(DB.TABLES.STOCK_IN);
             const purchaseItem = stockIn.find(s => s.itemName === document.getElementById('soItem').value.trim());
             const purchasePrice = purchaseItem?.purchasePrice || 0;
@@ -1737,7 +1600,7 @@ const App = {
                 const item = stockIn.find(s => s.barcode === barcode);
                 if (item) {
                     document.getElementById('soItem').value = item.itemName;
-                    document.getElementById('soPrice').value = item.purchasePrice * 1.2; // 20% markup
+                    document.getElementById('soPrice').value = item.purchasePrice * 1.2;
                 }
             }
         });
@@ -1768,20 +1631,15 @@ const App = {
 
         const printWindow = window.open('', '_blank', 'width=600,height=600');
         printWindow.document.write(`
-            <html>
-            <head><title>Invoice ${data.invoiceNumber}</title>
+            <html><head><title>Invoice ${data.invoiceNumber}</title>
             <style>
                 body { font-family: Arial, sans-serif; padding: 40px; }
                 .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
                 .header h1 { margin: 0; color: #4F46E5; }
-                .details { margin-bottom: 20px; }
-                .details table { width: 100%; }
-                .details td { padding: 6px 0; }
-                .footer { text-align: center; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px; color: #666; }
+                table { width: 100%; }
+                td { padding: 4px 0; }
                 .total { font-size: 1.2em; font-weight: bold; }
-                .amounts { margin-top: 20px; }
-                .amounts table { width: 100%; }
-                .amounts td { padding: 4px 0; }
+                .footer { text-align: center; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px; color: #666; }
             </style>
             </head>
             <body>
@@ -1790,33 +1648,25 @@ const App = {
                     <p>${settings.address} | ${settings.phone}</p>
                     <p><strong>INVOICE</strong></p>
                 </div>
-                <div class="details">
-                    <table>
-                        <tr><td><strong>Invoice #:</strong></td><td>${data.invoiceNumber}</td></tr>
-                        <tr><td><strong>Date:</strong></td><td>${Utils.formatDate(data.createdAt)}</td></tr>
-                        <tr><td><strong>Customer:</strong></td><td>${data.customerName}</td></tr>
-                        <tr><td><strong>Item:</strong></td><td>${data.itemName}</td></tr>
-                        <tr><td><strong>Barcode:</strong></td><td>${data.barcode || 'N/A'}</td></tr>
-                        <tr><td><strong>Quantity:</strong></td><td>${data.quantity}</td></tr>
-                        <tr><td><strong>Price:</strong></td><td>${Utils.formatCurrency(data.salePrice)}</td></tr>
-                    </table>
-                </div>
-                <div class="amounts">
-                    <table>
-                        <tr><td>Subtotal:</td><td>${Utils.formatCurrency(total)}</td></tr>
-                        ${data.discount ? `<tr><td>Discount (${data.discount}%):</td><td>-${Utils.formatCurrency(discountAmount)}</td></tr>` : ''}
-                        ${data.tax ? `<tr><td>Tax (${data.tax}%):</td><td>${Utils.formatCurrency(taxAmount)}</td></tr>` : ''}
-                        <tr><td><strong>Total:</strong></td><td><strong>${Utils.formatCurrency(total - discountAmount + taxAmount)}</strong></td></tr>
-                    </table>
-                </div>
-                ${data.notes ? `<p><strong>Notes:</strong> ${data.notes}</p>` : ''}
+                <table>
+                    <tr><td><strong>Invoice #:</strong></td><td>${data.invoiceNumber}</td></tr>
+                    <tr><td><strong>Date:</strong></td><td>${Utils.formatDate(data.createdAt)}</td></tr>
+                    <tr><td><strong>Customer:</strong></td><td>${data.customerName}</td></tr>
+                    <tr><td><strong>Item:</strong></td><td>${data.itemName}</td></tr>
+                    <tr><td><strong>Barcode:</strong></td><td>${data.barcode || 'N/A'}</td></tr>
+                    <tr><td><strong>Quantity:</strong></td><td>${data.quantity}</td></tr>
+                    <tr><td><strong>Price:</strong></td><td>${Utils.formatCurrency(data.salePrice)}</td></tr>
+                    <tr><td>Subtotal:</td><td>${Utils.formatCurrency(total)}</td></tr>
+                    ${data.discount ? `<tr><td>Discount (${data.discount}%):</td><td>-${Utils.formatCurrency(discountAmount)}</td></tr>` : ''}
+                    ${data.tax ? `<tr><td>Tax (${data.tax}%):</td><td>${Utils.formatCurrency(taxAmount)}</td></tr>` : ''}
+                    <tr><td><strong>Total:</strong></td><td class="total">${Utils.formatCurrency(total - discountAmount + taxAmount)}</td></tr>
+                    ${data.notes ? `<tr><td><strong>Notes:</strong></td><td>${data.notes}</td></tr>` : ''}
+                </table>
                 <div class="footer">
                     <p>${settings.footerNote || 'Thank you for your business!'}</p>
                     <p>Generated: ${new Date().toLocaleString()}</p>
                 </div>
-                <script>
-                    window.onload = function() { window.print(); }
-                <\/script>
+                <script>window.onload = function() { window.print(); }</script>
             </body>
             </html>
         `);
@@ -1825,7 +1675,11 @@ const App = {
 
     _exportStockOut() {
         const data = DB.readAll(DB.TABLES.STOCK_OUT);
-        const headers = ['Invoice', 'Date', 'Customer', 'Item', 'Barcode', 'Quantity', 'Price', 'Discount', 'Tax', 'Total', 'Profit', 'Notes'];
+        if (data.length === 0) {
+            Utils.toast('No data to export', 'warning');
+            return;
+        }
+        const headers = ['Invoice', 'Date', 'Customer', 'Item', 'Barcode', 'Quantity', 'Sale Price', 'Discount', 'Tax', 'Total', 'Profit', 'Notes'];
         const csv = Utils.arrayToCSV(data.map(item => ({
             Invoice: item.invoiceNumber || '',
             Date: Utils.formatDate(item.createdAt, 'date'),
@@ -1833,44 +1687,43 @@ const App = {
             Item: item.itemName,
             Barcode: item.barcode || '',
             Quantity: item.quantity,
-            Price: item.salePrice,
+            'Sale Price': item.salePrice,
             Discount: item.discount || 0,
             Tax: item.tax || 0,
             Total: item.total || 0,
             Profit: item.profit || 0,
             Notes: item.notes || ''
         })), headers);
-        Utils.downloadFile(csv, 'stock_out_export.csv', 'text/csv');
+        Utils.downloadFile(csv, `stock_out_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
         Utils.toast('Stock OUT exported!', 'success');
     },
 
     // ============================================================
     // STOCK BALANCE
     // ============================================================
-
     _renderStockBalance() {
         const content = document.getElementById('pageContent');
         const balance = DB.getStockBalance();
 
         content.innerHTML = `
             <div class="flex-between mb-16">
-                <h2>Current Stock Balance</h2>
+                <h2 style="font-size:1.2rem;">Current Stock Balance</h2>
                 <div class="flex gap-8">
                     <button class="btn btn-success btn-sm" onclick="App._exportStockBalance()"><i class="fas fa-file-excel"></i> Export</button>
                     <button class="btn btn-primary btn-sm" onclick="App._printStockBalance()"><i class="fas fa-print"></i> Print</button>
                 </div>
             </div>
 
-            <div class="card mb-16">
+            <div class="card">
                 <div class="flex flex-wrap gap-8">
-                    <input type="text" id="balanceSearch" class="form-control" style="flex:1;min-width:200px;" placeholder="Search by item or barcode...">
-                    <select id="balanceFilter" class="form-control" style="width:160px;">
+                    <input type="text" id="balanceSearch" class="form-control" style="flex:1;min-width:180px;" placeholder="Search by item or barcode..." />
+                    <select id="balanceFilter" class="form-control" style="width:150px;">
                         <option value="all">All Items</option>
                         <option value="in-stock">In Stock</option>
                         <option value="low-stock">Low Stock</option>
                         <option value="out-of-stock">Out of Stock</option>
                     </select>
-                    <button class="btn btn-outline" onclick="App._filterBalance()"><i class="fas fa-filter"></i> Filter</button>
+                    <button class="btn btn-outline" onclick="App._filterBalance()"><i class="fas fa-filter"></i></button>
                 </div>
             </div>
 
@@ -1878,18 +1731,7 @@ const App = {
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr>
-                                <th>Barcode</th>
-                                <th>Item</th>
-                                <th>Total In</th>
-                                <th>Total Out</th>
-                                <th>Available</th>
-                                <th>Unit</th>
-                                <th>Purchase Price</th>
-                                <th>Selling Price</th>
-                                <th>Stock Value</th>
-                                <th>Profit</th>
-                            </tr>
+                            <tr><th>Barcode</th><th>Item</th><th>Total In</th><th>Total Out</th><th>Available</th><th>Unit</th><th>Purchase Price</th><th>Selling Price</th><th>Stock Value</th><th>Profit</th></tr>
                         </thead>
                         <tbody id="balanceTable">
                             ${balance.map(item => `
@@ -1906,7 +1748,7 @@ const App = {
                                     <td class="${item.profit > 0 ? 'text-success' : 'text-danger'}">${Utils.formatCurrency(item.profit)}</td>
                                 </tr>
                             `).join('')}
-                            ${balance.length === 0 ? '<tr><td colspan="10" class="text-center text-muted">No items in stock</td></tr>' : ''}
+                            ${balance.length === 0 ? '<tr><td colspan="10" class="table-empty"><i class="fas fa-inbox"></i>No items in stock</td></tr>' : ''}
                         </tbody>
                     </table>
                 </div>
@@ -1953,12 +1795,16 @@ const App = {
                     <td>${Utils.formatCurrency(item.stockValue)}</td>
                     <td class="${item.profit > 0 ? 'text-success' : 'text-danger'}">${Utils.formatCurrency(item.profit)}</td>
                 </tr>
-            `).join('') || '<tr><td colspan="10" class="text-center text-muted">No matching items</td></tr>';
+            `).join('') || '<tr><td colspan="10" class="table-empty"><i class="fas fa-inbox"></i>No matching items</td></tr>';
         }
     },
 
     _exportStockBalance() {
         const data = DB.getStockBalance();
+        if (data.length === 0) {
+            Utils.toast('No data to export', 'warning');
+            return;
+        }
         const headers = ['Barcode', 'Item', 'Total In', 'Total Out', 'Available', 'Unit', 'Purchase Price', 'Selling Price', 'Stock Value', 'Profit'];
         const csv = Utils.arrayToCSV(data.map(item => ({
             Barcode: item.barcode,
@@ -1972,23 +1818,26 @@ const App = {
             'Stock Value': item.stockValue,
             Profit: item.profit
         })), headers);
-        Utils.downloadFile(csv, 'stock_balance_export.csv', 'text/csv');
+        Utils.downloadFile(csv, `stock_balance_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
         Utils.toast('Stock balance exported!', 'success');
     },
 
     _printStockBalance() {
         const data = DB.getStockBalance();
-        const settings = Utils.getSettings();
+        if (data.length === 0) {
+            Utils.toast('No data to print', 'warning');
+            return;
+        }
 
+        const settings = Utils.getSettings();
         const printWindow = window.open('', '_blank', 'width=900,height=600');
         printWindow.document.write(`
-            <html>
-            <head><title>Stock Balance Report</title>
+            <html><head><title>Stock Balance Report</title>
             <style>
                 body { font-family: Arial, sans-serif; padding: 30px; }
                 .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
                 .header h1 { margin: 0; color: #4F46E5; }
-                table { width: 100%; border-collapse: collapse; font-size: 12px; }
+                table { width: 100%; border-collapse: collapse; font-size: 11px; }
                 th { background: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #ddd; }
                 td { padding: 6px 8px; border: 1px solid #ddd; }
                 .footer { text-align: center; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px; color: #666; }
@@ -2005,18 +1854,7 @@ const App = {
                 </div>
                 <table>
                     <thead>
-                        <tr>
-                            <th>Barcode</th>
-                            <th>Item</th>
-                            <th>Total In</th>
-                            <th>Total Out</th>
-                            <th>Available</th>
-                            <th>Unit</th>
-                            <th>Purchase Price</th>
-                            <th>Selling Price</th>
-                            <th>Stock Value</th>
-                            <th>Profit</th>
-                        </tr>
+                        <tr><th>Barcode</th><th>Item</th><th>Total In</th><th>Total Out</th><th>Available</th><th>Unit</th><th>Purchase Price</th><th>Selling Price</th><th>Stock Value</th><th>Profit</th></tr>
                     </thead>
                     <tbody>
                         ${data.map(item => `
@@ -2038,9 +1876,7 @@ const App = {
                 <div class="footer">
                     <p>${settings.footerNote || 'Thank you for your business!'}</p>
                 </div>
-                <script>
-                    window.onload = function() { window.print(); }
-                <\/script>
+                <script>window.onload = function() { window.print(); }</script>
             </body>
             </html>
         `);
@@ -2050,23 +1886,22 @@ const App = {
     // ============================================================
     // DAILY REPORT
     // ============================================================
-
     _renderDailyReport() {
         const content = document.getElementById('pageContent');
         const today = new Date().toISOString().split('T')[0];
 
         content.innerHTML = `
             <div class="flex-between mb-16">
-                <h2>Daily Report</h2>
+                <h2 style="font-size:1.2rem;">Daily Report</h2>
                 <div class="flex gap-8">
                     <button class="btn btn-success btn-sm" onclick="App._exportDailyReport()"><i class="fas fa-file-excel"></i> Export</button>
                     <button class="btn btn-primary btn-sm" onclick="App._printDailyReport()"><i class="fas fa-print"></i> Print</button>
                 </div>
             </div>
 
-            <div class="card mb-16">
+            <div class="card">
                 <div class="flex flex-wrap gap-8">
-                    <select id="reportRange" class="form-control" style="width:150px;">
+                    <select id="reportRange" class="form-control" style="width:140px;">
                         <option value="today">Today</option>
                         <option value="yesterday">Yesterday</option>
                         <option value="week">This Week</option>
@@ -2074,14 +1909,13 @@ const App = {
                         <option value="custom">Custom</option>
                     </select>
                     <input type="date" id="reportStart" class="form-control" style="width:150px;" value="${today}">
+                    <span style="color:var(--text-secondary);display:flex;align-items:center;">to</span>
                     <input type="date" id="reportEnd" class="form-control" style="width:150px;" value="${today}">
                     <button class="btn btn-primary" onclick="App._generateReport()"><i class="fas fa-chart-bar"></i> Generate</button>
                 </div>
             </div>
 
-            <div id="reportResults">
-                ${this._generateReportData(today, today)}
-            </div>
+            <div id="reportResults"></div>
         `;
 
         document.getElementById('reportRange')?.addEventListener('change', (e) => {
@@ -2103,8 +1937,6 @@ const App = {
                 const d = new Date(today);
                 d.setDate(1);
                 start = d.toISOString().split('T')[0];
-            } else if (val === 'custom') {
-                // Don't auto-set custom dates
             }
 
             document.getElementById('reportStart').value = start;
@@ -2114,68 +1946,59 @@ const App = {
             }
         });
 
-        // Auto generate on load
         setTimeout(() => this._generateReport(), 100);
     },
 
     _generateReport() {
         const start = document.getElementById('reportStart')?.value || '';
         const end = document.getElementById('reportEnd')?.value || '';
-        if (start && end) {
-            const results = document.getElementById('reportResults');
-            if (results) {
-                results.innerHTML = this._generateReportData(start, end);
-            }
-        }
-    },
+        const results = document.getElementById('reportResults');
+        if (!start || !end || !results) return;
 
-    _generateReportData(startDate, endDate) {
         const stockIn = DB.readAll(DB.TABLES.STOCK_IN);
         const stockOut = DB.readAll(DB.TABLES.STOCK_OUT);
 
         const inData = stockIn.filter(item => {
             const date = item.createdAt?.split('T')[0] || '';
-            return date >= startDate && date <= endDate;
+            return date >= start && date <= end;
         });
 
         const outData = stockOut.filter(item => {
             const date = item.createdAt?.split('T')[0] || '';
-            return date >= startDate && date <= endDate;
+            return date >= start && date <= end;
         });
 
         const totalPurchases = inData.reduce((sum, item) => sum + (item.quantity * item.purchasePrice), 0);
         const totalSales = outData.reduce((sum, item) => sum + (item.quantity * item.salePrice), 0);
         const totalProfit = outData.reduce((sum, item) => sum + (item.profit || 0), 0);
 
-        return `
-            <div class="dashboard-grid">
+        results.innerHTML = `
+            <div class="dashboard-grid" style="margin-top:20px;">
                 <div class="stat-card">
                     <div class="stat-label">Total Purchases</div>
                     <div class="stat-value">${Utils.formatCurrency(totalPurchases)}</div>
-                    <div class="stat-label" style="font-size:0.8rem;">${inData.length} entries</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">${inData.length} entries</div>
                 </div>
-                <div class="stat-card color-success">
+                <div class="stat-card">
                     <div class="stat-label">Total Sales</div>
                     <div class="stat-value">${Utils.formatCurrency(totalSales)}</div>
-                    <div class="stat-label" style="font-size:0.8rem;">${outData.length} entries</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">${outData.length} entries</div>
                 </div>
-                <div class="stat-card color-info">
+                <div class="stat-card">
                     <div class="stat-label">Total Profit</div>
                     <div class="stat-value ${totalProfit > 0 ? 'text-success' : 'text-danger'}">${Utils.formatCurrency(totalProfit)}</div>
                 </div>
-                <div class="stat-card color-warning">
+                <div class="stat-card">
                     <div class="stat-label">Net Balance</div>
                     <div class="stat-value ${(totalSales - totalPurchases) > 0 ? 'text-success' : 'text-danger'}">${Utils.formatCurrency(totalSales - totalPurchases)}</div>
                 </div>
             </div>
 
-            <div class="card mt-16">
-                <h3><i class="fas fa-shopping-cart"></i> Purchases</h3>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-shopping-cart"></i> Purchases (${inData.length})</div>
                 <div class="table-responsive">
                     <table>
-                        <thead>
-                            <tr><th>Date</th><th>Vendor</th><th>Item</th><th>Qty</th><th>Total</th></tr>
-                        </thead>
+                        <thead><tr><th>Date</th><th>Vendor</th><th>Item</th><th>Qty</th><th>Total</th></tr></thead>
                         <tbody>
                             ${inData.slice(0, 20).map(item => `
                                 <tr>
@@ -2186,19 +2009,17 @@ const App = {
                                     <td>${Utils.formatCurrency(item.quantity * item.purchasePrice)}</td>
                                 </tr>
                             `).join('')}
-                            ${inData.length === 0 ? '<tr><td colspan="5" class="text-center text-muted">No purchases</td></tr>' : ''}
+                            ${inData.length === 0 ? '<tr><td colspan="5" class="table-empty"><i class="fas fa-inbox"></i>No purchases</td></tr>' : ''}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="card mt-16">
-                <h3><i class="fas fa-chart-line"></i> Sales</h3>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-chart-line"></i> Sales (${outData.length})</div>
                 <div class="table-responsive">
                     <table>
-                        <thead>
-                            <tr><th>Date</th><th>Customer</th><th>Item</th><th>Qty</th><th>Total</th><th>Profit</th></tr>
-                        </thead>
+                        <thead><tr><th>Date</th><th>Customer</th><th>Item</th><th>Qty</th><th>Total</th><th>Profit</th></tr></thead>
                         <tbody>
                             ${outData.slice(0, 20).map(item => `
                                 <tr>
@@ -2210,7 +2031,7 @@ const App = {
                                     <td class="${(item.profit || 0) > 0 ? 'text-success' : 'text-danger'}">${Utils.formatCurrency(item.profit || 0)}</td>
                                 </tr>
                             `).join('')}
-                            ${outData.length === 0 ? '<tr><td colspan="6" class="text-center text-muted">No sales</td></tr>' : ''}
+                            ${outData.length === 0 ? '<tr><td colspan="6" class="table-empty"><i class="fas fa-inbox"></i>No sales</td></tr>' : ''}
                         </tbody>
                     </table>
                 </div>
@@ -2221,7 +2042,10 @@ const App = {
     _exportDailyReport() {
         const start = document.getElementById('reportStart')?.value || '';
         const end = document.getElementById('reportEnd')?.value || '';
-        if (!start || !end) return;
+        if (!start || !end) {
+            Utils.toast('Please select date range', 'warning');
+            return;
+        }
 
         const stockIn = DB.readAll(DB.TABLES.STOCK_IN);
         const stockOut = DB.readAll(DB.TABLES.STOCK_OUT);
@@ -2243,7 +2067,7 @@ const App = {
                 Party: item.vendorName,
                 Item: item.itemName,
                 Quantity: item.quantity,
-                Unit: item.unit,
+                Unit: item.unit || 'pcs',
                 Price: item.purchasePrice,
                 Total: item.quantity * item.purchasePrice
             })),
@@ -2259,6 +2083,11 @@ const App = {
             }))
         ];
 
+        if (allData.length === 0) {
+            Utils.toast('No data to export', 'warning');
+            return;
+        }
+
         const headers = ['Type', 'Date', 'Party', 'Item', 'Quantity', 'Unit', 'Price', 'Total'];
         const csv = Utils.arrayToCSV(allData, headers);
         Utils.downloadFile(csv, `daily_report_${start}_to_${end}.csv`, 'text/csv');
@@ -2266,19 +2095,21 @@ const App = {
     },
 
     _printDailyReport() {
-        const content = document.getElementById('reportResults');
-        if (!content) return;
+        const results = document.getElementById('reportResults');
+        if (!results || !results.innerHTML.trim()) {
+            Utils.toast('No data to print', 'warning');
+            return;
+        }
 
         const settings = Utils.getSettings();
         const printWindow = window.open('', '_blank', 'width=900,height=600');
         printWindow.document.write(`
-            <html>
-            <head><title>Daily Report</title>
+            <html><head><title>Daily Report</title>
             <style>
                 body { font-family: Arial, sans-serif; padding: 30px; }
                 .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
                 .header h1 { margin: 0; color: #4F46E5; }
-                table { width: 100%; border-collapse: collapse; font-size: 12px; }
+                table { width: 100%; border-collapse: collapse; font-size: 11px; }
                 th { background: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #ddd; }
                 td { padding: 6px 8px; border: 1px solid #ddd; }
                 .footer { text-align: center; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px; color: #666; }
@@ -2291,13 +2122,11 @@ const App = {
                     <p><strong>Daily Report</strong></p>
                     <p>Generated: ${new Date().toLocaleString()}</p>
                 </div>
-                ${content.innerHTML}
+                ${results.innerHTML}
                 <div class="footer">
                     <p>${settings.footerNote || 'Thank you for your business!'}</p>
                 </div>
-                <script>
-                    window.onload = function() { window.print(); }
-                <\/script>
+                <script>window.onload = function() { window.print(); }</script>
             </body>
             </html>
         `);
@@ -2307,37 +2136,27 @@ const App = {
     // ============================================================
     // LEDGER
     // ============================================================
-
     _renderLedger() {
         const content = document.getElementById('pageContent');
         const ledger = DB.readAll(DB.TABLES.LEDGER);
-        const parties = Utils.unique([
-            ...DB.readAll(DB.TABLES.VENDORS).map(v => v.name),
-            ...DB.readAll(DB.TABLES.CUSTOMERS).map(c => c.name)
-        ]);
 
         content.innerHTML = `
             <div class="flex-between mb-16">
-                <h2>Ledger</h2>
+                <h2 style="font-size:1.2rem;">Ledger</h2>
                 <button class="btn btn-primary" onclick="App._showLedgerEntry()">
                     <i class="fas fa-plus"></i> New Entry
                 </button>
             </div>
 
-            <div class="card mb-16">
+            <div class="card">
                 <div class="flex flex-wrap gap-8">
-                    <select id="ledgerParty" class="form-control" style="flex:1;min-width:150px;">
-                        <option value="all">All Parties</option>
-                        ${parties.map(p => `<option value="${p}">${p}</option>`).join('')}
-                    </select>
+                    <input type="text" id="ledgerSearch" class="form-control" style="flex:1;min-width:150px;" placeholder="Search party..." />
                     <select id="ledgerType" class="form-control" style="width:130px;">
                         <option value="all">All Types</option>
                         <option value="credit">Credit</option>
                         <option value="debit">Debit</option>
                     </select>
-                    <input type="date" id="ledgerStart" class="form-control" style="width:150px;">
-                    <input type="date" id="ledgerEnd" class="form-control" style="width:150px;">
-                    <button class="btn btn-primary" onclick="App._filterLedger()"><i class="fas fa-filter"></i> Filter</button>
+                    <button class="btn btn-outline" onclick="App._filterLedger()"><i class="fas fa-filter"></i></button>
                     <button class="btn btn-success btn-sm" onclick="App._exportLedger()"><i class="fas fa-file-excel"></i> Export</button>
                 </div>
             </div>
@@ -2346,16 +2165,7 @@ const App = {
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Party</th>
-                                <th>Type</th>
-                                <th>Description</th>
-                                <th>Credit</th>
-                                <th>Debit</th>
-                                <th>Balance</th>
-                                <th>Actions</th>
-                            </tr>
+                            <tr><th>Date</th><th>Party</th><th>Type</th><th>Description</th><th>Credit</th><th>Debit</th><th>Balance</th><th>Actions</th></tr>
                         </thead>
                         <tbody id="ledgerTable">
                             ${ledger.map(item => `
@@ -2372,12 +2182,15 @@ const App = {
                                     </td>
                                 </tr>
                             `).join('')}
-                            ${ledger.length === 0 ? '<tr><td colspan="8" class="text-center text-muted">No ledger entries</td></tr>' : ''}
+                            ${ledger.length === 0 ? '<tr><td colspan="8" class="table-empty"><i class="fas fa-inbox"></i>No ledger entries</td></tr>' : ''}
                         </tbody>
                     </table>
                 </div>
             </div>
         `;
+
+        document.getElementById('ledgerSearch')?.addEventListener('input', Utils.debounce(this._filterLedger, 300));
+        document.getElementById('ledgerType')?.addEventListener('change', this._filterLedger);
 
         // Set default dates
         const now = new Date();
@@ -2387,24 +2200,17 @@ const App = {
     },
 
     _filterLedger() {
-        const party = document.getElementById('ledgerParty')?.value || '';
-        const type = document.getElementById('ledgerType')?.value || '';
-        const start = document.getElementById('ledgerStart')?.value || '';
-        const end = document.getElementById('ledgerEnd')?.value || '';
-
+        const search = document.getElementById('ledgerSearch')?.value || '';
+        const type = document.getElementById('ledgerType')?.value || 'all';
         let data = DB.readAll(DB.TABLES.LEDGER);
 
-        if (party && party !== 'all') {
-            data = data.filter(item => item.partyName === party);
+        if (search) {
+            const term = search.toLowerCase();
+            data = data.filter(item => item.partyName?.toLowerCase().includes(term));
         }
-        if (type && type !== 'all') {
+
+        if (type !== 'all') {
             data = data.filter(item => item.type === type);
-        }
-        if (start) {
-            data = data.filter(item => (item.createdAt?.split('T')[0] || '') >= start);
-        }
-        if (end) {
-            data = data.filter(item => (item.createdAt?.split('T')[0] || '') <= end);
         }
 
         // Calculate running balance
@@ -2430,7 +2236,7 @@ const App = {
                         <button class="btn btn-danger btn-xs" onclick="App._deleteLedger('${item.id}')"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
-            `).join('') || '<tr><td colspan="8" class="text-center text-muted">No matching entries</td></tr>';
+            `).join('') || '<tr><td colspan="8" class="table-empty"><i class="fas fa-inbox"></i>No matching entries</td></tr>';
         }
     },
 
@@ -2471,7 +2277,7 @@ const App = {
                     <label>Description</label>
                     <textarea id="ledgerDesc" class="form-control" placeholder="Description">${data?.description || ''}</textarea>
                 </div>
-                <div class="flex gap-8" style="margin-top:12px;">
+                <div class="form-actions">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> ${isEdit ? 'Update' : 'Save'}</button>
                     <button type="button" class="btn btn-outline modal-close-btn">Cancel</button>
                 </div>
@@ -2496,19 +2302,10 @@ const App = {
                 return;
             }
 
-            // Calculate running balance
-            const allEntries = DB.readAll(DB.TABLES.LEDGER);
-            let balance = 0;
-            allEntries.forEach(item => {
-                if (item.type === 'credit') balance += item.amount;
-                else balance -= item.amount;
-            });
-
             if (isEdit) {
                 DB.update(DB.TABLES.LEDGER, data.id, formData);
                 Utils.toast('Ledger entry updated!', 'success');
             } else {
-                formData.balance = formData.type === 'credit' ? balance + formData.amount : balance - formData.amount;
                 DB.create(DB.TABLES.LEDGER, formData);
                 Utils.toast('Ledger entry saved!', 'success');
             }
@@ -2529,6 +2326,10 @@ const App = {
 
     _exportLedger() {
         const data = DB.readAll(DB.TABLES.LEDGER);
+        if (data.length === 0) {
+            Utils.toast('No data to export', 'warning');
+            return;
+        }
         const headers = ['Date', 'Party', 'Type', 'Description', 'Amount', 'Balance'];
         const csv = Utils.arrayToCSV(data.map(item => ({
             Date: Utils.formatDate(item.createdAt, 'date'),
@@ -2538,49 +2339,63 @@ const App = {
             Amount: item.amount,
             Balance: item.balance || 0
         })), headers);
-        Utils.downloadFile(csv, 'ledger_export.csv', 'text/csv');
+        Utils.downloadFile(csv, `ledger_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
         Utils.toast('Ledger exported!', 'success');
     },
 
     // ============================================================
     // REPORTS
     // ============================================================
-
     _renderReports() {
         const content = document.getElementById('pageContent');
 
         content.innerHTML = `
-            <h2 class="mb-16">Reports</h2>
+            <h2 style="font-size:1.2rem;margin-bottom:16px;">Reports</h2>
 
             <div class="dashboard-grid">
                 <div class="stat-card" onclick="App._generateReportType('purchase')" style="cursor:pointer;">
-                    <div class="stat-icon"><i class="fas fa-truck"></i></div>
+                    <div class="stat-top">
+                        <div class="stat-icon"><i class="fas fa-truck"></i></div>
+                    </div>
                     <div class="stat-label">Purchase Report</div>
                 </div>
-                <div class="stat-card color-success" onclick="App._generateReportType('sales')" style="cursor:pointer;">
-                    <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
+                <div class="stat-card" onclick="App._generateReportType('sales')" style="cursor:pointer;">
+                    <div class="stat-top">
+                        <div class="stat-icon green"><i class="fas fa-shopping-cart"></i></div>
+                    </div>
                     <div class="stat-label">Sales Report</div>
                 </div>
-                <div class="stat-card color-info" onclick="App._generateReportType('profit')" style="cursor:pointer;">
-                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                <div class="stat-card" onclick="App._generateReportType('profit')" style="cursor:pointer;">
+                    <div class="stat-top">
+                        <div class="stat-icon blue"><i class="fas fa-chart-line"></i></div>
+                    </div>
                     <div class="stat-label">Profit Report</div>
                 </div>
-                <div class="stat-card color-warning" onclick="App._generateReportType('stock')" style="cursor:pointer;">
-                    <div class="stat-icon"><i class="fas fa-boxes"></i></div>
+                <div class="stat-card" onclick="App._generateReportType('stock')" style="cursor:pointer;">
+                    <div class="stat-top">
+                        <div class="stat-icon orange"><i class="fas fa-boxes"></i></div>
+                    </div>
                     <div class="stat-label">Stock Report</div>
                 </div>
-                <div class="stat-card color-secondary" onclick="App._generateReportType('customer')" style="cursor:pointer;">
-                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-card" onclick="App._generateReportType('customer')" style="cursor:pointer;">
+                    <div class="stat-top">
+                        <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    </div>
                     <div class="stat-label">Customer Report</div>
                 </div>
                 <div class="stat-card" onclick="App._generateReportType('vendor')" style="cursor:pointer;">
-                    <div class="stat-icon"><i class="fas fa-handshake"></i></div>
+                    <div class="stat-top">
+                        <div class="stat-icon green"><i class="fas fa-handshake"></i></div>
+                    </div>
                     <div class="stat-label">Vendor Report</div>
                 </div>
             </div>
 
-            <div id="reportOutput" class="card mt-16">
-                <p class="text-center text-muted" style="padding:40px;">Select a report type above to generate</p>
+            <div id="reportOutput" class="card">
+                <div class="table-empty">
+                    <i class="fas fa-file-alt"></i>
+                    <p>Select a report type above to generate</p>
+                </div>
             </div>
         `;
     },
@@ -2619,8 +2434,17 @@ const App = {
                 break;
         }
 
-        const headers = data.length > 0 ? Object.keys(data[0]) : [];
-        const displayHeaders = headers.filter(h => !['id', 'password', 'createdAt', 'updatedAt'].includes(h));
+        if (data.length === 0) {
+            output.innerHTML = `
+                <div class="table-empty">
+                    <i class="fas fa-inbox"></i>
+                    <p>No data available for ${title}</p>
+                </div>
+            `;
+            return;
+        }
+
+        const headers = Object.keys(data[0]).filter(h => !['id', 'password', 'createdAt', 'updatedAt'].includes(h));
 
         output.innerHTML = `
             <div class="flex-between mb-16">
@@ -2633,29 +2457,30 @@ const App = {
             <div class="table-responsive">
                 <table>
                     <thead>
-                        <tr>
-                            ${displayHeaders.map(h => `<th>${h.replace(/([A-Z])/g, ' $1').trim()}</th>`).join('')}
-                        </tr>
+                        <tr>${headers.map(h => `<th>${h.replace(/([A-Z])/g, ' $1').trim()}</th>`).join('')}</tr>
                     </thead>
                     <tbody>
                         ${data.slice(0, 100).map(item => `
                             <tr>
-                                ${displayHeaders.map(h => {
+                                ${headers.map(h => {
                                     let val = item[h];
-                                    if (typeof val === 'number') val = Utils.formatCurrency(val);
-                                    else if (h.includes('Date') || h.includes('date')) val = Utils.formatDate(val, 'date');
+                                    if (typeof val === 'number' && h.toLowerCase().includes('price')) {
+                                        val = Utils.formatCurrency(val);
+                                    } else if (typeof val === 'number') {
+                                        val = val;
+                                    } else if (h.includes('Date') || h.includes('date')) {
+                                        val = Utils.formatDate(val, 'date');
+                                    }
                                     return `<td>${val || '-'}</td>`;
                                 }).join('')}
                             </tr>
                         `).join('')}
-                        ${data.length === 0 ? `<tr><td colspan="${displayHeaders.length}" class="text-center text-muted">No data</td></tr>` : ''}
                     </tbody>
                 </table>
                 ${data.length > 100 ? `<p class="text-muted mt-8">Showing first 100 of ${data.length} records</p>` : ''}
             </div>
         `;
 
-        // Store report data for export
         window._reportData = { type, data, title };
     },
 
@@ -2678,11 +2503,7 @@ const App = {
         const headers = Object.keys(data[0]).filter(h => !['id', 'password', 'createdAt', 'updatedAt'].includes(h));
         const csv = Utils.arrayToCSV(data.map(item => {
             const obj = {};
-            headers.forEach(h => {
-                let val = item[h];
-                if (typeof val === 'number') val = val;
-                obj[h] = val || '';
-            });
+            headers.forEach(h => { obj[h] = item[h] || ''; });
             return obj;
         }), headers);
         Utils.downloadFile(csv, `${type}_report_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
@@ -2696,13 +2517,12 @@ const App = {
         const settings = Utils.getSettings();
         const printWindow = window.open('', '_blank', 'width=900,height=600');
         printWindow.document.write(`
-            <html>
-            <head><title>${type} Report</title>
+            <html><head><title>${type} Report</title>
             <style>
                 body { font-family: Arial, sans-serif; padding: 30px; }
                 .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
                 .header h1 { margin: 0; color: #4F46E5; }
-                table { width: 100%; border-collapse: collapse; font-size: 11px; }
+                table { width: 100%; border-collapse: collapse; font-size: 10px; }
                 th { background: #f0f0f0; padding: 6px; text-align: left; border: 1px solid #ddd; }
                 td { padding: 4px 6px; border: 1px solid #ddd; }
                 .footer { text-align: center; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px; color: #666; }
@@ -2719,9 +2539,7 @@ const App = {
                 <div class="footer">
                     <p>${settings.footerNote || 'Thank you for your business!'}</p>
                 </div>
-                <script>
-                    window.onload = function() { window.print(); }
-                <\/script>
+                <script>window.onload = function() { window.print(); }</script>
             </body>
             </html>
         `);
@@ -2731,41 +2549,39 @@ const App = {
     // ============================================================
     // SEARCH
     // ============================================================
-
     _renderSearch() {
         const content = document.getElementById('pageContent');
 
         content.innerHTML = `
-            <h2 class="mb-16">Global Search</h2>
+            <h2 style="font-size:1.2rem;margin-bottom:16px;">Global Search</h2>
 
-            <div class="card mb-16">
+            <div class="card">
                 <div class="flex gap-8">
-                    <input type="text" id="searchQuery" class="form-control" style="flex:1;" placeholder="Search by item, barcode, vendor, customer, invoice..." autofocus>
+                    <input type="text" id="searchQuery" class="form-control" style="flex:1;" placeholder="Search items, vendors, customers, invoices..." autofocus />
                     <button class="btn btn-primary" onclick="App._performSearch()"><i class="fas fa-search"></i> Search</button>
                     <button class="btn btn-outline" onclick="document.getElementById('searchQuery').value='';document.getElementById('searchResults').innerHTML='';"><i class="fas fa-undo"></i> Clear</button>
                 </div>
                 <div class="flex flex-wrap gap-8 mt-8">
-                    <span class="badge badge-info" style="cursor:pointer;padding:4px 12px;" onclick="document.getElementById('searchQuery').value=this.textContent;App._performSearch();">Item</span>
-                    <span class="badge badge-success" style="cursor:pointer;padding:4px 12px;" onclick="document.getElementById('searchQuery').value=this.textContent;App._performSearch();">Barcode</span>
-                    <span class="badge badge-warning" style="cursor:pointer;padding:4px 12px;" onclick="document.getElementById('searchQuery').value=this.textContent;App._performSearch();">Vendor</span>
-                    <span class="badge badge-danger" style="cursor:pointer;padding:4px 12px;" onclick="document.getElementById('searchQuery').value=this.textContent;App._performSearch();">Customer</span>
-                    <span class="badge badge-secondary" style="cursor:pointer;padding:4px 12px;" onclick="document.getElementById('searchQuery').value=this.textContent;App._performSearch();">Invoice</span>
+                    <span class="badge badge-primary" style="cursor:pointer;padding:4px 14px;" onclick="document.getElementById('searchQuery').value=this.textContent;App._performSearch();">Item</span>
+                    <span class="badge badge-info" style="cursor:pointer;padding:4px 14px;" onclick="document.getElementById('searchQuery').value=this.textContent;App._performSearch();">Barcode</span>
+                    <span class="badge badge-warning" style="cursor:pointer;padding:4px 14px;" onclick="document.getElementById('searchQuery').value=this.textContent;App._performSearch();">Vendor</span>
+                    <span class="badge badge-success" style="cursor:pointer;padding:4px 14px;" onclick="document.getElementById('searchQuery').value=this.textContent;App._performSearch();">Customer</span>
+                    <span class="badge badge-danger" style="cursor:pointer;padding:4px 14px;" onclick="document.getElementById('searchQuery').value=this.textContent;App._performSearch();">Invoice</span>
                 </div>
             </div>
 
             <div id="searchResults"></div>
         `;
 
-        // Auto-search if query was passed
+        document.getElementById('searchQuery')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this._performSearch();
+        });
+
         const query = new URLSearchParams(window.location.search).get('q');
         if (query) {
             document.getElementById('searchQuery').value = query;
             setTimeout(() => this._performSearch(), 100);
         }
-
-        document.getElementById('searchQuery')?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this._performSearch();
-        });
     },
 
     _performSearch() {
@@ -2774,7 +2590,6 @@ const App = {
 
         if (!query || !results) return;
 
-        // Search in all tables
         const stockIn = DB.readAll(DB.TABLES.STOCK_IN);
         const stockOut = DB.readAll(DB.TABLES.STOCK_OUT);
         const vendors = DB.readAll(DB.TABLES.VENDORS);
@@ -2810,24 +2625,24 @@ const App = {
         if (totalResults === 0) {
             results.innerHTML = `
                 <div class="card">
-                    <p class="text-center text-muted" style="padding:40px;">
-                        <i class="fas fa-search" style="font-size:2rem;display:block;margin-bottom:12px;"></i>
-                        No results found for "<strong>${query}</strong>"
-                    </p>
+                    <div class="table-empty">
+                        <i class="fas fa-search"></i>
+                        <p>No results found for "<strong>${query}</strong>"</p>
+                    </div>
                 </div>
             `;
             return;
         }
 
         results.innerHTML = `
-            <h3 class="mb-16">Found ${totalResults} results for "<strong>${query}</strong>"</h3>
+            <h3 style="margin:16px 0;">Found ${totalResults} results for "<strong>${query}</strong>"</h3>
 
             ${inResults.length > 0 ? `
-                <div class="card mb-16">
-                    <h4><i class="fas fa-arrow-down text-success"></i> Stock IN (${inResults.length})</h4>
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-arrow-down text-success"></i> Stock IN (${inResults.length})</div>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Date</th><th>Vendor</th><th>Item</th><th>Barcode</th><th>Qty</th><th>Price</th></tr></thead>
+                            <thead><tr><th>Date</th><th>Vendor</th><th>Item</th><th>Barcode</th><th>Qty</th></tr></thead>
                             <tbody>
                                 ${inResults.map(item => `
                                     <tr>
@@ -2836,7 +2651,6 @@ const App = {
                                         <td>${item.itemName}</td>
                                         <td><span class="badge badge-info">${item.barcode}</span></td>
                                         <td>${item.quantity}</td>
-                                        <td>${Utils.formatCurrency(item.purchasePrice)}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -2846,11 +2660,11 @@ const App = {
             ` : ''}
 
             ${outResults.length > 0 ? `
-                <div class="card mb-16">
-                    <h4><i class="fas fa-arrow-up text-danger"></i> Stock OUT (${outResults.length})</h4>
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-arrow-up text-danger"></i> Stock OUT (${outResults.length})</div>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Date</th><th>Customer</th><th>Item</th><th>Invoice</th><th>Qty</th><th>Total</th></tr></thead>
+                            <thead><tr><th>Date</th><th>Customer</th><th>Item</th><th>Invoice</th><th>Qty</th></tr></thead>
                             <tbody>
                                 ${outResults.map(item => `
                                     <tr>
@@ -2859,7 +2673,6 @@ const App = {
                                         <td>${item.itemName}</td>
                                         <td><span class="badge badge-info">${item.invoiceNumber}</span></td>
                                         <td>${item.quantity}</td>
-                                        <td>${Utils.formatCurrency(item.quantity * item.salePrice)}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -2869,8 +2682,8 @@ const App = {
             ` : ''}
 
             ${vendorResults.length > 0 ? `
-                <div class="card mb-16">
-                    <h4><i class="fas fa-handshake text-warning"></i> Vendors (${vendorResults.length})</h4>
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-handshake text-warning"></i> Vendors (${vendorResults.length})</div>
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Name</th><th>Phone</th><th>Address</th></tr></thead>
@@ -2889,8 +2702,8 @@ const App = {
             ` : ''}
 
             ${customerResults.length > 0 ? `
-                <div class="card mb-16">
-                    <h4><i class="fas fa-users text-primary"></i> Customers (${customerResults.length})</h4>
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-users text-primary"></i> Customers (${customerResults.length})</div>
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Name</th><th>Phone</th><th>Address</th></tr></thead>
@@ -2913,40 +2726,35 @@ const App = {
     // ============================================================
     // SETTINGS
     // ============================================================
-
     _renderSettings() {
         const content = document.getElementById('pageContent');
         const settings = Utils.getSettings();
+        const config = Utils.getSupabaseConfig();
 
         content.innerHTML = `
-            <h2 class="mb-16">Settings</h2>
+            <h2 style="font-size:1.2rem;margin-bottom:16px;">Settings</h2>
 
             <div class="card">
+                <h3 class="card-title"><i class="fas fa-building"></i> Company Settings</h3>
                 <form id="settingsForm">
                     <div class="form-row">
                         <div class="form-group">
                             <label>Company Name</label>
-                            <input type="text" id="setCompanyName" class="form-control" value="${settings.companyName || ''}">
-                        </div>
-                        <div class="form-group">
-                            <label>Company Logo URL</label>
-                            <input type="text" id="setLogo" class="form-control" placeholder="Logo URL" value="${settings.companyLogo || ''}">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Address</label>
-                            <input type="text" id="setAddress" class="form-control" value="${settings.address || ''}">
+                            <input type="text" id="setCompanyName" class="form-control" value="${settings.companyName || ''}" />
                         </div>
                         <div class="form-group">
                             <label>Phone</label>
-                            <input type="text" id="setPhone" class="form-control" value="${settings.phone || ''}">
+                            <input type="text" id="setPhone" class="form-control" value="${settings.phone || ''}" />
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <input type="text" id="setAddress" class="form-control" value="${settings.address || ''}" />
                     </div>
                     <div class="form-row-3">
                         <div class="form-group">
                             <label>Tax Rate (%)</label>
-                            <input type="number" id="setTax" class="form-control" value="${settings.taxRate || 0}" min="0" max="100" step="0.1">
+                            <input type="number" id="setTax" class="form-control" value="${settings.taxRate || 0}" min="0" max="100" step="0.1" />
                         </div>
                         <div class="form-group">
                             <label>Currency</label>
@@ -2960,27 +2768,42 @@ const App = {
                         </div>
                         <div class="form-group">
                             <label>Invoice Prefix</label>
-                            <input type="text" id="setInvoicePrefix" class="form-control" value="${settings.invoicePrefix || 'INV-'}">
+                            <input type="text" id="setInvoicePrefix" class="form-control" value="${settings.invoicePrefix || 'INV-'}" />
                         </div>
                     </div>
                     <div class="form-group">
                         <label>Footer Note</label>
-                        <input type="text" id="setFooter" class="form-control" value="${settings.footerNote || ''}" placeholder="Thank you for your business!">
-                    </div>
-                    <div class="form-group">
-                        <label>Supabase URL (for cloud sync)</label>
-                        <input type="text" id="setSupabaseUrl" class="form-control" placeholder="https://your-project.supabase.co" value="${localStorage.getItem('supabase_url') || ''}">
-                    </div>
-                    <div class="form-group">
-                        <label>Supabase Key</label>
-                        <input type="password" id="setSupabaseKey" class="form-control" placeholder="Your supabase anon key" value="${localStorage.getItem('supabase_key') || ''}">
+                        <input type="text" id="setFooter" class="form-control" value="${settings.footerNote || ''}" placeholder="Thank you for your business!" />
                     </div>
                     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Settings</button>
                 </form>
             </div>
 
-            <div class="card mt-16">
-                <h3>Users Management</h3>
+            <div class="card">
+                <h3 class="card-title"><i class="fas fa-cloud"></i> Supabase Cloud Sync</h3>
+                <form id="supabaseForm">
+                    <div class="form-group">
+                        <label>Supabase URL</label>
+                        <input type="text" id="setSupabaseUrl" class="form-control" placeholder="https://your-project.supabase.co" value="${config.url || ''}" />
+                    </div>
+                    <div class="form-group">
+                        <label>Supabase API Key</label>
+                        <input type="password" id="setSupabaseKey" class="form-control" placeholder="Your supabase anon key" value="${config.key || ''}" />
+                    </div>
+                    <div class="flex gap-8">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Configuration</button>
+                        <button type="button" class="btn btn-success" onclick="SyncManager.forceSync()"><i class="fas fa-sync"></i> Test Sync</button>
+                        <button type="button" class="btn btn-outline" onclick="document.getElementById('setSupabaseUrl').value='';document.getElementById('setSupabaseKey').value='';Utils.setSupabaseConfig('','');Utils.toast('Cleared!','success');"><i class="fas fa-undo"></i> Clear</button>
+                    </div>
+                    <div class="mt-16" style="font-size:0.8rem;color:var(--text-muted);">
+                        <strong>Status:</strong>
+                        <span id="supabaseStatus">${config.url ? (navigator.onLine ? '🟢 Connected' : '🔴 Offline') : '⚪ Not Configured'}</span>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title"><i class="fas fa-users"></i> User Management</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -3008,32 +2831,35 @@ const App = {
             </div>
         `;
 
+        // Company Settings Form
         document.getElementById('settingsForm').addEventListener('submit', (e) => {
             e.preventDefault();
-
-            const updates = {
+            Utils.updateSettings({
                 companyName: document.getElementById('setCompanyName').value.trim(),
-                companyLogo: document.getElementById('setLogo').value.trim(),
-                address: document.getElementById('setAddress').value.trim(),
                 phone: document.getElementById('setPhone').value.trim(),
+                address: document.getElementById('setAddress').value.trim(),
                 taxRate: parseFloat(document.getElementById('setTax').value) || 0,
                 currency: document.getElementById('setCurrency').value,
                 invoicePrefix: document.getElementById('setInvoicePrefix').value.trim(),
                 footerNote: document.getElementById('setFooter').value.trim()
-            };
-
-            Utils.updateSettings(updates);
-
-            // Save Supabase config
-            const supabaseUrl = document.getElementById('setSupabaseUrl').value.trim();
-            const supabaseKey = document.getElementById('setSupabaseKey').value.trim();
-            if (supabaseUrl && supabaseKey) {
-                localStorage.setItem('supabase_url', supabaseUrl);
-                localStorage.setItem('supabase_key', supabaseKey);
-                SyncManager.init(supabaseUrl, supabaseKey);
-            }
-
+            });
             Utils.toast('Settings saved!', 'success');
+        });
+
+        // Supabase Form
+        document.getElementById('supabaseForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const url = document.getElementById('setSupabaseUrl').value.trim();
+            const key = document.getElementById('setSupabaseKey').value.trim();
+
+            if (url && key) {
+                Utils.setSupabaseConfig(url, key);
+                Utils.toast('Supabase configuration saved!', 'success');
+                document.getElementById('supabaseStatus').textContent = '🟢 Connected';
+                SyncManager.init();
+            } else {
+                Utils.toast('Please enter both URL and Key', 'warning');
+            }
         });
     },
 
@@ -3043,21 +2869,21 @@ const App = {
                 <div class="form-row">
                     <div class="form-group">
                         <label>Username <span class="required">*</span></label>
-                        <input type="text" id="newUsername" class="form-control" placeholder="Username" required>
+                        <input type="text" id="newUsername" class="form-control" placeholder="Username" required />
                     </div>
                     <div class="form-group">
                         <label>Password <span class="required">*</span></label>
-                        <input type="password" id="newPassword" class="form-control" placeholder="Password" required>
+                        <input type="password" id="newPassword" class="form-control" placeholder="Password" required />
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Name <span class="required">*</span></label>
-                        <input type="text" id="newName" class="form-control" placeholder="Full name" required>
+                        <input type="text" id="newName" class="form-control" placeholder="Full name" required />
                     </div>
                     <div class="form-group">
                         <label>Email</label>
-                        <input type="email" id="newEmail" class="form-control" placeholder="Email">
+                        <input type="email" id="newEmail" class="form-control" placeholder="Email" />
                     </div>
                 </div>
                 <div class="form-group">
@@ -3067,7 +2893,7 @@ const App = {
                         <option value="admin">Admin</option>
                     </select>
                 </div>
-                <div class="flex gap-8" style="margin-top:12px;">
+                <div class="form-actions">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus"></i> Add User</button>
                     <button type="button" class="btn btn-outline modal-close-btn">Cancel</button>
                 </div>
@@ -3124,39 +2950,46 @@ const App = {
     // ============================================================
     // BACKUP
     // ============================================================
-
     _renderBackup() {
         const content = document.getElementById('pageContent');
 
         content.innerHTML = `
-            <h2 class="mb-16">Backup & Restore</h2>
+            <h2 style="font-size:1.2rem;margin-bottom:16px;">Backup & Restore</h2>
 
             <div class="dashboard-grid">
                 <div class="stat-card" onclick="App._createBackup()" style="cursor:pointer;">
-                    <div class="stat-icon"><i class="fas fa-download"></i></div>
+                    <div class="stat-top">
+                        <div class="stat-icon"><i class="fas fa-download"></i></div>
+                    </div>
                     <div class="stat-label">Create Backup</div>
-                    <div style="font-size:0.8rem;color:var(--text-light);">Export all data as JSON</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">Export all data as JSON</div>
                 </div>
-                <div class="stat-card color-success" onclick="document.getElementById('restoreInput').click()" style="cursor:pointer;">
-                    <div class="stat-icon"><i class="fas fa-upload"></i></div>
+                <div class="stat-card" onclick="document.getElementById('restoreInput').click()" style="cursor:pointer;">
+                    <div class="stat-top">
+                        <div class="stat-icon green"><i class="fas fa-upload"></i></div>
+                    </div>
                     <div class="stat-label">Restore Backup</div>
-                    <div style="font-size:0.8rem;color:var(--text-light);">Import from JSON file</div>
-                    <input type="file" id="restoreInput" accept=".json" style="display:none;">
+                    <div style="font-size:0.75rem;color:var(--text-muted);">Import from JSON file</div>
+                    <input type="file" id="restoreInput" accept=".json" style="display:none;" />
                 </div>
-                <div class="stat-card color-info" onclick="App._exportExcel()" style="cursor:pointer;">
-                    <div class="stat-icon"><i class="fas fa-file-excel"></i></div>
+                <div class="stat-card" onclick="App._exportExcel()" style="cursor:pointer;">
+                    <div class="stat-top">
+                        <div class="stat-icon blue"><i class="fas fa-file-excel"></i></div>
+                    </div>
                     <div class="stat-label">Export Excel</div>
-                    <div style="font-size:0.8rem;color:var(--text-light);">Export all data to Excel</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">Export all data to CSV</div>
                 </div>
-                <div class="stat-card color-danger" onclick="App._resetData()" style="cursor:pointer;">
-                    <div class="stat-icon"><i class="fas fa-trash"></i></div>
+                <div class="stat-card" onclick="App._resetData()" style="cursor:pointer;">
+                    <div class="stat-top">
+                        <div class="stat-icon red"><i class="fas fa-trash"></i></div>
+                    </div>
                     <div class="stat-label">Reset All Data</div>
-                    <div style="font-size:0.8rem;color:var(--text-light);">Clear all data (irreversible)</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">⚠️ Irreversible action</div>
                 </div>
             </div>
 
-            <div class="card mt-16">
-                <h3>Backup Information</h3>
+            <div class="card">
+                <h3 class="card-title"><i class="fas fa-info-circle"></i> Backup Information</h3>
                 <div class="flex flex-wrap gap-16">
                     <div>
                         <strong>Total Records:</strong>
@@ -3170,16 +3003,17 @@ const App = {
                         <strong>Storage Used:</strong>
                         <span>${this._getStorageSize()}</span>
                     </div>
+                    <div>
+                        <strong>Pending Sync:</strong>
+                        <span>${DB.getPendingSyncCount()}</span>
+                    </div>
                 </div>
             </div>
         `;
 
-        // Restore handler
         document.getElementById('restoreInput')?.addEventListener('change', (e) => {
             const file = e.target.files[0];
-            if (file) {
-                this._restoreBackup(file);
-            }
+            if (file) this._restoreBackup(file);
         });
     },
 
@@ -3187,14 +3021,13 @@ const App = {
         const data = DB.exportAll();
         data._metadata = {
             exportedAt: new Date().toISOString(),
-            version: '1.0',
+            version: '2.0',
             company: Utils.getSettings().companyName,
             records: Object.values(data).reduce((sum, arr) => sum + arr.length, 0)
         };
 
         const json = JSON.stringify(data, null, 2);
-        const filename = `krt_backup_${new Date().toISOString().split('T')[0]}.json`;
-        Utils.downloadFile(json, filename, 'application/json');
+        Utils.downloadFile(json, `krt_backup_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
         localStorage.setItem('krt_last_backup', new Date().toLocaleString());
         Utils.toast('Backup created successfully!', 'success');
         this._renderBackup();
@@ -3204,7 +3037,7 @@ const App = {
         const reader = new FileReader();
         reader.onload = async (e) => {
             try {
-                const data = Utils.safeJSONParse(e.target.result);
+                const data = JSON.parse(e.target.result);
                 if (!data || typeof data !== 'object') {
                     Utils.toast('Invalid backup file', 'error');
                     return;
@@ -3243,7 +3076,7 @@ const App = {
 
         const headers = ['_table', ...Object.keys(allData[0]).filter(k => k !== '_table')];
         const csv = Utils.arrayToCSV(allData, headers);
-        Utils.downloadFile(csv, `krt_data_export_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+        Utils.downloadFile(csv, `krt_export_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
         Utils.toast('Data exported!', 'success');
     },
 
@@ -3273,7 +3106,7 @@ const App = {
         let total = 0;
         for (let key in localStorage) {
             if (localStorage.hasOwnProperty(key)) {
-                total += localStorage[key].length * 2; // UTF-16
+                total += localStorage[key].length * 2;
             }
         }
         if (total < 1024) return total + ' B';
@@ -3285,39 +3118,17 @@ const App = {
 // ============================================================
 // INITIALIZE APPLICATION
 // ============================================================
-
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize auth first
     Auth.init();
-
-    // Initialize app if authenticated
-    if (Auth.isAuthenticated()) {
-        App.init();
-
-        // Setup online/offline listeners for sync
-        window.addEventListener('online', () => {
-            Utils.toast('Back online!', 'success');
-            SyncManager.processQueue();
-        });
-
-        window.addEventListener('offline', () => {
-            Utils.toast('You are offline. Working in offline mode.', 'warning');
-        });
-
-        // Initial sync check
-        setTimeout(() => {
-            const url = localStorage.getItem('supabase_url');
-            const key = localStorage.getItem('supabase_key');
-            if (url && key) {
-                SyncManager.init(url, key);
-            }
-        }, 2000);
-    }
-
-    // Expose App globally for inline onclick handlers
     window.App = App;
     window.Utils = Utils;
     window.DB = DB;
-    window.SyncManager = SyncManager;
     window.Auth = Auth;
+    window.SyncManager = SyncManager;
+
+    // Check for Supabase config on load
+    const config = Utils.getSupabaseConfig();
+    if (config.url && config.key) {
+        SyncManager.init();
+    }
 });
