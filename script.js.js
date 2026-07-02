@@ -1,3 +1,19 @@
+// Find this section at the bottom of the file
+// Replace the existing initialization with:
+
+// Initial sync check
+setTimeout(() => {
+    const url = 'https://pukopnrxgitwataauvgo.supabase.co';
+    const key = 'sb_publishable_vOC-igCOGRZ6lmIegNTZHA_2kWXn1ve';
+    
+    // Store credentials
+    localStorage.setItem('supabase_url', url);
+    localStorage.setItem('supabase_key', key);
+    
+    // Initialize sync
+    SyncManager.init(url, key);
+}, 2000);
+
 // ============================================================
 // KRT TRADERS ERP – Complete System
 // Single File – All Modules
